@@ -100,7 +100,7 @@ sub unpause {
 #
 
 # function returns the path to the agents data_dir, html_dir and cgibin_dir
-sub get_conf_dirs 
+sub get_conf_dirs { 
 	my $html_dir = '/usr/local/share/penemo/html';
 	my $data_dir = '/usr/local/share/penemo/data';
 	my $cgibin_dir = '/cgi-bin';
