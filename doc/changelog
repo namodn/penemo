@@ -21,6 +21,11 @@ changes from version 1.0 BETA3 -> 1.0 (stable)
 	  all. Check out the penemo.conf that comes with the dist and
 	  check out all the new options, that should give you an idea,
 	  along with the agent.conf
+	* agent.conf redesigned a bit. Instead of using IP as unique
+	  ID, now uses arbitrary string as UID. IP is set in the
+	  id tag. This way servers can logically have multiple IP's and
+	  it works out very well in fact. Look at the agent.conf's examples
+	  to get a better idea of how it works.
 	
 
 changes from version 1.0 BETA2 -> 1.0 BETA3
