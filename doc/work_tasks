@@ -28,12 +28,22 @@
 
 
 [-] notify exec (pain in the ass)
+    (note: try notify_exec_name to group by, instead of actual notify_exec)
 
+
+[!] notify_end (tells when to _stop_ notifying
+
+[!] yellow light for errors where notifications havent yet been sent
+
+[!] config viewing from web
+
+[!] quick list of checks on main page after name
 
 [!] command line parameters
 
 [!] agent history using penemo output, stored in a file, and a cgi (penemo-admin) to
     run different queries on the data file etc. 
+
 
 [?] make http its own obj, or something, impliment multi-http checks.
 

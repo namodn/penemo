@@ -995,6 +995,8 @@ sub write_persistent_data {
 	open (DATA, ">$data_dir/$ip") or penemo::core->notify_die("Can't open $data_dir/$ip: $!\n");
 		print DATA "$ping_errlev\t$http_errlev\t$snmp_errlev\t$plugin_errlev\t$current_tier\t$notifications_sent\t$paused\t$paused_end\n";
 	close DATA;
+
+	system("chmod g=rw $data_dir/$ip");
 }
 
 

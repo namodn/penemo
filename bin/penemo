@@ -185,7 +185,7 @@ my @notification_objects = $conf->get_notification_object_array();
 # save current error levels to file for next time
 # done here because get_notification_objects_array modifies errlevs
 foreach my $agent (@agents) {
-	# write current errorlevels to file
+	# write current errorlevels and misc agent data to file
 	#print "  ", $agent->get_ip(), ": writing agent data.\n";
 	$agent->write_persistent_data($conf->get_data_dir());
 }
