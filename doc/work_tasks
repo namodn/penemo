@@ -12,19 +12,21 @@
         tier it was on, to let everyone know the problem is 
         resolved. config option.
 
-[*] html output for agents and the index of agents.
+[x] html output for agents and the index of agents.
 
 [-] extensive pausing features
 
 [-] replace all dies and errors with notify functionality.
 
+[-] add another check funtion for plugins.
+
 [!] make it so notifications reset <type>_errlev, so that there arent
       overlapping counts from different checks in same agent, resulting
       in more notifications than set in notify_level
 
-[!] add another check funtion for plugins.
-
 [!] make a history page for each agent.
 
 [!] make http its own obj, or something, impliment multi-http checks.
+
+[!] snmp mibs dont have a way to notify on snmp alerts within mib check.
 
