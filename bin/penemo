@@ -102,12 +102,6 @@ foreach my $agent (@agents) {
 	&snmp_check($agent);
 	&plugin_check($agent);
 
-	# write agent html
-	print "  $ip: writing agents html file.\n";
-	$agent->write_agent_html( $conf->get_html_dir() );
-	# add to list of agents for index html
-	$conf->push_html_agentlist($agent);
-
 	if ($agent->get_error_detected()) { 
 		my $stack = 0;   # true if agent is to be stacked.
 		if ($agent->ping_check()) {
@@ -157,6 +151,11 @@ foreach my $agent (@agents) {
 		$agent->set_notifications_sent('0');
 		#$agent->set_current_tier('0');
 	}
+	# write agent html
+	print "  $ip: writing agents html file.\n";
+	$agent->write_agent_html( $conf->get_html_dir() );
+	# add to list of agents for index html
+	$conf->push_html_agentlist($agent);
 }
 
 # print total agents loaded
@@ -195,7 +194,7 @@ foreach my $notify (@notification_objects) {
 		next;
 	}
 	
-	print "notification msg sent to: ", $notify->get_method(), "\n";
+	print "\nnotification msg sent to: ", $notify->get_method(), "\n";
 	$notify->email($conf->get_instance_name(), $version);
 }
 
@@ -346,6 +345,8 @@ sub add_to_notify_stack {
 	print "  $ip: error(s) detected adding to notification stack.\n";
 	$conf->push_notification_stack($agent);
 	$agent->set_have_notifications_been_sent('1');
+	# currently on the notification stack
+	$agent->set_on_notify_stack('1');
 }
 
 

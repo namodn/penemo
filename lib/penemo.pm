@@ -79,6 +79,9 @@ sub html_image {
 	elsif ($name eq 'pause') { 
 		return ("<IMG SRC=\"$path/blue_button.gif\" BORDER=0 ALT=\"blue\">");
 	} 
+	elsif ($name eq 'warn') {
+		return ("<IMG SRC=\"$path/yellow_button.gif\" BORDER=0 ALT=\"yellow\">");
+	}
 	else {
 		return ("* "); 
 	} 
@@ -761,6 +764,7 @@ sub index_html_write {
 	my $ok_light = penemo::core->html_image('index', 'ok'); 
 	my $bad_light = penemo::core->html_image('index', 'bad'); 
 	my $paused_light = penemo::core->html_image('index', 'pause'); 
+	my $warn_light = penemo::core->html_image('index', 'warn'); 
 	my $max_ip_length = 0;
 	my $cgi_bin = $self->get_cgibin_dir();
 
@@ -808,7 +812,12 @@ sub index_html_write {
 						print HTML "$paused_light  ";
 					}
 					elsif ($agent->get_index_error_detected()) { 
-						print HTML "$bad_light  ";
+						if ($agent->get_on_notify_stack()) {
+							print HTML "$bad_light\n";
+						}
+						else {
+							print HTML "$warn_light\n";
+						}
 					} 
 					else { 
 						print HTML "$ok_light  ";
@@ -940,6 +949,7 @@ sub new {
 			have_notifications_been_sent	=> '0',
 			paused			=> '',
 			paused_end		=> '',
+			on_notify_stack		=> 0,
         }, $class;
 	
         $self->_incr_count();
@@ -1027,6 +1037,11 @@ sub set_current_tier {
 	$self->{current_tier} = $set; 
 }
 
+sub get_on_notify_stack		{ $_[0]->{on_notify_stack} }
+sub set_on_notify_stack {
+	my ($self, $set) = @_;
+	$self->{on_notify_stack} = $set;
+}
 sub get_notifications_sent	{ $_[0]->{notifications_sent} }
 sub set_notifications_sent { 
 	my ($self, $set) = @_;
@@ -1486,6 +1501,7 @@ sub write_agent_html
 
 	my $ok_light = penemo::core->html_image('agent', 'ok'); 
 	my $bad_light = penemo::core->html_image('agent', 'bad'); 
+	my $warn_light = penemo::core->html_image('agent', 'warn'); 
 
 	unless (-d "$html_dir/agents/$ip") { 
 		system("mkdir $html_dir/agents/$ip"); 
@@ -1529,7 +1545,12 @@ sub write_agent_html
 		unless ($self->get_ping_status()) { 
 			$self->set_index_error_detected();
 			print HTML "<FONT COLOR=\"#AAAAAA\" SIZE=1><I>PING</I></FONT><BR>\n";
-			print HTML "$bad_light\n";
+			if ($self->get_on_notify_stack()) {
+				print HTML "$bad_light\n";
+			}
+			else {
+				print HTML "$warn_light\n";
+			}
 			print HTML "<FONT COLOR=\"#DD1111\">Can't ping $ip !! "; 
 			print HTML "Machine might be down!</FONT><BR>\n"; 
 			print HTML "<BR>\n";
@@ -1562,7 +1583,13 @@ sub write_agent_html
 			}
 			else {
 				$self->set_index_error_detected();
-				print HTML "$bad_light\n";
+				if ($self->get_on_notify_stack()) {
+					print HTML "$bad_light\n";
+				}
+				else {
+					print HTML "$warn_light\n";
+				}
+
 				print HTML "<FONT COLOR=\"#DD1111\">",
 					"HTTP search failed finding string: ", 
 					"<FONT COLOR=\#FF5555\">", $self->get_http_url(), 
@@ -1573,7 +1600,13 @@ sub write_agent_html
 		}
 		else { 
 			$self->set_index_error_detected();
-			print HTML "$bad_light\n";
+			if ($self->get_on_notify_stack()) {
+				print HTML "$bad_light\n";
+			}
+			else {
+				print HTML "$warn_light\n";
+			}
+
 			print HTML "<FONT COLOR=\"#DD1111\">HTTP failed fetching url: ", 
 					"</FONT><FONT COLOR=\"#FF5555\">", $self->get_http_url(), 
 					"</FONT><BR>\n";
@@ -1594,7 +1627,13 @@ sub write_agent_html
 			}
 			else {
 				$self->set_index_error_detected();
-				print HTML "$bad_light\n";
+				if ($self->get_on_notify_stack()) {
+					print HTML "$bad_light\n";
+				}
+				else {
+					print HTML "$warn_light\n";
+				}
+
 				print HTML "<FONT COLOR=\"#DD1111\"> ", $self->get_snmp_message($mib),
 					"</FONT><BR>\n";
 			}
@@ -1615,7 +1654,13 @@ sub write_agent_html
 			}
 			else {
 				$self->set_index_error_detected();
-				print HTML "$bad_light\n";
+				if ($self->get_on_notify_stack()) {
+					print HTML "$bad_light\n";
+				}
+				else {
+					print HTML "$warn_light\n";
+				}
+
 				print HTML "<FONT COLOR=\"#DD1111\"> ", $self->get_plugin_message($mod),
 					"</FONT><BR>\n";
 			}
