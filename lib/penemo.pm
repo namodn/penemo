@@ -27,6 +27,7 @@
 #
 #
 
+$VERSION = '1.0.1';
 
 ############################
 ############################
@@ -96,11 +97,17 @@ sub html_image {
 sub notify_die {
 	my ($class, $msg) = @_;
 
+	my $sendmail = `which sendmail`;
+	chomp $sendmail;
+	unless ($sendmail) {
+		$sendmail = '/usr/sbin/sendmail';
+	}
+
 	print "\n\n** penemo had an internal error:\n";
 	print "**   $msg\n";
 	print "** sending emergency notification to root\@localhost\n";
 
-	open(MAIL, "| /usr/sbin/sendmail -t -oi") 
+	open(MAIL, "| $sendmail -t -oi") 
 			or die "Can't send death notification email : $!\n"; 
 		print MAIL "To: root\@localhost\n"; 
 		print MAIL "From: penemo-notify\n";
@@ -170,6 +177,7 @@ sub _default_config {
 		dir_cache       => '/usr/local/share/penemo/cache',
 		dir_data	=> '/usr/local/share/penemo/data',
 		dir_ucd_bin     => '/usr/local/bin',
+		dir_sendmail_bin => '/usr/sbin',
 		dir_log		=> '/usr/local/share/penemo/logs',
 		dir_cgibin	=> '/cgi-bin',
 		dir_exec	=> '/usr/local/share/penemo/exec',
@@ -239,6 +247,7 @@ sub _default_config {
 			dir_log		=> $conf{dir_log},
 			dir_cgibin	=> $conf{dir_cgibin},
 			dir_ucd_bin	=> $conf{dir_ucd_bin},
+			dir_sendmail_bin => $conf{dir_sendmail_bin},
 			http_command    => $conf{http_command},
 			pause_web       => $conf{pause_web},
 			pause_box_index => $conf{pause_box_index},
@@ -270,7 +279,7 @@ sub _agent_config {
 		unless ($agent) {
 			next if ($begin); 
 			my $else = '';
-			($agent, $else) = split(/ /, $line); 
+			($agent, $else) = split(/\s+/, $line); 
 			unless ($agent)	{ $agent = $line; }
 			next unless ($else); 
 			$line = $else;
@@ -408,6 +417,7 @@ sub get_dir_log			{ $_[0]->{default}{dir_log} }
 sub get_dir_cgibin		{ $_[0]->{default}{dir_cgibin} }
 sub get_penemo_bin              { $_[0]->{default}{penemo_bin} }
 sub get_dir_ucd_bin             { $_[0]->{default}{dir_ucd_bin} }
+sub get_dir_sendmail_bin        { $_[0]->{default}{dir_sendmail_bin} }
 sub get_http_command            { $_[0]->{default}{http_command} }
 sub get_instance_name		{ $_[0]->{default}{instance_name} }
 sub get_pause_web		{ $_[0]->{default}{pause_web} }
@@ -712,7 +722,7 @@ sub organize_notification_info {
 	$self->{notification_org}{$delm}{$aid}{plugin_check} = $agent->plugin_check();
 	if ($agent->get_plugin_mods()) {
 		$self->{notification_org}{$delm}{$aid}{mib_list} = $agent->get_plugin_mods();
-		my @mods = split(/ /, $agent->get_plugin_mods());
+		my @mods = split(/\s+/, $agent->get_plugin_mods());
 		foreach my $mod (@mods) {
 			$self->{notification_org}{$delm}{$aid}{plugin_status} = $agent->get_plugin_status($mod); 
 			$self->{notification_org}{$delm}{$aid}{plugin_msg} = $agent->get_plugin_message($mod);
@@ -732,6 +742,7 @@ sub organize_notification_info {
 	$self->{notification_org}{$delm}{tier} = $tier;
 	$self->{notification_org}{$delm}{func} = $delm;
 	$self->{notification_org}{$delm}{method} = $method;
+	$self->{notification_org}{$delm}{dir_sendmail_bin} = $self->_dir_sendmail_bin();
 }
 
 sub get_notification_object_array {
@@ -1068,12 +1079,17 @@ sub get_method {
 sub get_func {
 	$_[0]->{func};
 }
+sub _dir_sendmail_bin {
+	$_[0]->{dir_sendmail_bin};
+}
 
 
 sub email {
 	my ($self, $instance, $version) = @_;
 	my @aid_list = $self->_get_aid_list();
 	my @msg = ();
+
+	my $sendmail = $self->_dir_sendmail_bin();
 
 	foreach my $aid (@aid_list) {
 		my $name = $self->_get_name($aid);
@@ -1092,7 +1108,7 @@ sub email {
 		
 	chomp @msg;
 	
-        open(MAIL, "| /usr/sbin/sendmail -t -oi") 
+        open(MAIL, "| $sendmail -t -oi") 
 			or penemo::core->notify_die("Can't send notification email : $!\n"); 
 		print MAIL "To: $to\n"; 
 		print MAIL "From: penemo_notify\n";

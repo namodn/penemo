@@ -125,7 +125,7 @@ BUG REPORTS ETC.
 
  Nick Jennings, <nick@namodn.com>
 
- penemos homepage is located at: 
+ penemo homepage is located at: 
    http://www.penemo.org
 
 
