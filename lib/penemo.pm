@@ -1500,7 +1500,7 @@ sub write_agent_html
 	print HTML "\t<FONT SIZE=5><B>$ip - $name</B></FONT>\n"; 
 	print HTML "<HR WITH=50%>\n"; 
 
-	print HTML "[<A HREF=\"history/index.html\">history</A>]  ";
+	#print HTML "[<A HREF=\"history/index.html\">history</A>]  ";
 	if ($self->snmp_check()) { 
 		my @mibs = split(/ /, $self->get_snmp_mibs());
 		if (-f "$html_dir/agentdump/$ip") {
