@@ -1309,6 +1309,7 @@ sub ping {
 sub http {
    my ($self, $command, $cache) = @_;
    my $url = $self->get_http_url(); 
+   $url =~ s/http:\/\///g;
    my $check = '';
 
    if (! $command) {
