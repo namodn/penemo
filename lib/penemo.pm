@@ -662,14 +662,13 @@ sub index_html_write {
 					} 
 					print HTML "<A HREF=\"agents/$ip/index.html\">$ip</A> ",
 						" &nbsp "; 
-					print HTML "<FONT COLOR=\"#CCDDAA\"><B>",
-						$agent->get_name(), "</B></FONT> &nbsp\n", 
-						"<INPUT TYPE=text NAME=\"pause\" SIZE=5>";
-
+					print HTML "<FONT COLOR=#CCDDA><B>\n";
+					print HTML $agent->get_name();
+					print HTML "</B></FONT>\n"; 
 					print HTML "&nbsp &nbsp ";
-					print HTML "<FONT COLOR=\"#000000\">",
-						"<INPUT TYPE=Submit NAME=pause VALUE=pause>",
-						"</FONT><BR>\n"; 
+					print HTML "<FONT SIZE=2>\n";
+					print HTML "<A HREF=\"/cgi-bin/penemo-admin.cgi?agent=$ip&pause=1\">pause</A><BR>\n"; 
+					print HTML "</FONT>\n";
 				} 
 			} 
 			print HTML "&nbsp;<BR>\n"; 
