@@ -18,7 +18,7 @@ unless (($libdir) && ($moddir)) {
     exit 1;
 }
 
-$libdir =~ s/^\///;
+#$libdir =~ s/^\///;
 $libdir =~ s/\/$//;
 
 sub traverse_tree($) {

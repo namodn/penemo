@@ -10,6 +10,9 @@ PERMS_LIB=777
 HTML=share/penemo/html
 PERMS_TMPL=777
 
+DATA=share/penemo/data
+PERMS_DATA=777
+
 BIN=bin
 PERMS_BIN=777
 
@@ -26,8 +29,7 @@ CGIPATH=/cgi
 all:
 	@echo "use 'make install' to install"
 
-install: inst-doc inst-lib inst-tmpl inst-bin
-	
+install: inst-doc inst-lib inst-tmpl inst-bin inst-data
 
 inst-doc:
 	echo "Installing documentation..."
@@ -53,3 +55,6 @@ inst-bin:
 	#chown root:root $(PREFIX)/$(BIN)/penemo
 	chmod $(EXE_PERMS) $(PREFIX)/$(BIN)/penemo
 
+inst-data:
+	echo "Creating data dir..."
+	./mkdirto.pl $(PERMS_DATA) $(PREFIX)/$(DATA)
