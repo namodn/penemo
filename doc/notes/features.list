@@ -1,0 +1,10 @@
+Ideas for features in future releases of penemo.
+
+ - XML agent.conf
+ - better written snmp mib parsers.
+ - snmptrap support.
+ - templating display system.
+ - gateway devices (i.e. if this gateway device goes down, pause checking
+   for all devices flagged "behind" the gateway, or something).
+ - write some checks for basic things (telnet, ftp, ssh, http etc.). 
+
