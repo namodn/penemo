@@ -4,14 +4,27 @@ use strict;
 use CGI qw(:standard);
 use CGI::Carp;
 
+
+use lib '/usr/local/share/penemo/modules/';
+#use lib '/home/nick/devel/penemo/modules/';
+
+use penemo;
+
+my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
+#my $penemo_conf_file = '/home/nick/devel/penemo/conf/penemo.conf';
+
+my $agent_conf_file = '/usr/local/etc/penemo/agent.conf';
+#my $agent_conf_file = '/home/nick/devel/penemo/conf/agent.conf';
+
+my $conf = penemo::config->load_config($penemo_conf_file, $agent_conf_file);
+
 #my $conf_dir = '/usr/local/etc/penemo/';
-my $conf_dir = '/home/nick/devel/penemo/conf/';
+#my $conf_dir = '/home/nick/devel/penemo/conf/';
 
 unless (param('agent')) {
 	die "no agent specified\n";
 }
 
-my ($data_dir, $html_dir, $cgibin_dir) = &get_conf_dirs();
 my $date = `date`;
 my ($date_string, $date_delimited) = &convert_date_to_string();
 my $agent = param('agent');
@@ -32,6 +45,7 @@ else {
 sub pause {
 	my $paused = convert_to_fulltime();
 
+	# load agents data file into array
 	my @data = &load_data();  # load agent data into array
 
 	if ($data[7] != '000000000000') {
@@ -57,7 +71,6 @@ sub pause {
 		$data[7] = $paused;
 	
 		&set_data(@data);  # write agent data with paused info
-		&update_html_pause($paused);
 
 		print header;
 		print "<HEAD><TITLE>$agent paused</TITLE></HEAD>\n";
@@ -65,6 +78,7 @@ sub pause {
 		print "&nbsp;<BR>\n";
 		print "$agent paused untill: $paused <BR>\n";
 		print "&nbsp;<BR>\n";
+		print "the html will be updated the next time penemo is run.<BR>\n";
 		print "</BODY>\n";
 		print end_html;
 		exit;
@@ -73,12 +87,18 @@ sub pause {
 
 # sub to unpause agent
 sub unpause {
+	# load agents data into array
 	my @data = &load_data();
 
+	# this unpauses agent
 	$data[6] = '0';
 	$data[7] = '000000000000';
 
+	# write data back to file
 	&set_data(@data);
+
+	# update index.html to show agent unpaused.
+	#&update_html_unpause();
 
 	print header;
 	print "<HEAD><TITLE>unpaused $agent</TITLE></HEAD>\n";
@@ -86,7 +106,7 @@ sub unpause {
 	print "&nbsp;<BR>\n";
 	print "$agent has been unpaused<BR>\n";
 	print "&nbsp;<BR>\n";
-	print "html display will be updated next time penemo is run.<BR>\n";
+	print "the html will be updated the next time penemo is run.<BR>\n";
 	print "</BODY>\n";
 	print end_html;
 	exit;
@@ -98,38 +118,6 @@ sub unpause {
 #
 # FUNCTIONS
 #
-
-# function returns the path to the agents data_dir, html_dir and cgibin_dir
-sub get_conf_dirs { 
-	my $html_dir = '/usr/local/share/penemo/html';
-	my $data_dir = '/usr/local/share/penemo/data';
-	my $cgibin_dir = '/cgi-bin';
-
-	open(CFG, "$conf_dir/penemo.conf")
-			or die "Can't open $conf_dir/penemo.conf : $!\n";
-		my @file = <CFG>;
-	close CFG;
-
-	foreach my $line (@file) {
-		next if ($line =~ /^\s*#/);
-		next if ($line =~ /^$/);
-		chomp $line;
-
-		if ($line =~ /^data_dir/) {
-			my ($name, $value) = split(' ', $line);
-			$data_dir = $value;
-		}
-		elsif ($line =~ /^html_dir/) {
-			my ($name, $value) = split(' ', $line);
-			$html_dir = $value;
-		}
-		elsif ($line =~ /^cgibin_dir/) {
-			my ($name, $value) = split(' ', $line);
-			$cgibin_dir = $value;
-		}
-	}
-	return ($data_dir, $html_dir, $cgibin_dir);
-}
 
 # prints html for to get time to pause agent for.
 sub get_time {
@@ -209,7 +197,9 @@ sub convert_month {
 }
 
 
+# load agents data 
 sub load_data {
+	my $data_dir = $conf->get_data_dir();
 	open (DATA, "$data_dir/$agent") or die "Cant open $data_dir/$agent : $!\n";
 		my @data = <DATA>;
 	close DATA;
@@ -220,6 +210,7 @@ sub load_data {
 
 sub set_data {
 	my (@data) = @_;
+	my $data_dir = $conf->get_data_dir();
 	open (DATA, ">$data_dir/$agent") or die "Cant open $data_dir/$agent : $!\n";
 		foreach my $delm (@data) {
 			print DATA "$delm\t";
@@ -229,8 +220,29 @@ sub set_data {
 }
 
 
-sub update_html_pause {
-	my $time = shift;
-}
-sub update_html_unpause {
-}
+#sub update_html_pause {
+#	my $time = shift;
+#	my $html_dir = $conf->get_html_dir();
+#	my @html = ();
+#
+#	open (HTML, "$html_dir/index.html") or die "Cant open $html_dir/index.html : $!\n";
+#		@html = <HTML>;
+#	close HTML;
+#
+#	open (HTML, ">$html_dir/index.html") or die "Cant open $html_dir/index.html : $!\n";
+#	foreach my $line (@html) {
+#		if ($line =~ /\<A HREF=\"agents\/$agent\/index.html\"\>/) {
+#			$line =~ s/green/blue/;	
+#			$line =~ s/red/blue/;	
+#		}	
+#		if ($line =~ /agent=\$agent&pause=1/) {
+#			$line =~ s/pause/unpause/;
+#			$line = "untill: $time<BR>" . $line;	
+#		}
+#		print HTML $line;
+#	}
+#	close HTML;
+#	
+#}
+#sub update_html_unpause {
+#}
