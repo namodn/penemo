@@ -36,7 +36,7 @@
 ####
 ####
 
-package penemo::snmp;
+package penemo::agent::snmp;
 
 use lib "$ENV{PENEMO_MODS}";
 

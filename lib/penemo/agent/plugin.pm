@@ -36,9 +36,9 @@
 ####
 ####
 
-package penemo::plugin;
+package penemo::agent::plugin;
 
-use lib "$ENV{PENEMO_MODS";
+use lib "$ENV{PENEMO_MODS}";
 
 use strict;
 
