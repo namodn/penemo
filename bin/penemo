@@ -136,14 +136,8 @@ foreach my $agent (@agents) {
 			# reset errlev if set to do so.
 			if ($agent->get_errlev_reset()) {
 				$agent->set_ping_errlev('0');
-			}
-			if ($agent->get_errlev_reset()) {
 				$agent->set_http_errlev('0');
-			}
-			if ($agent->get_errlev_reset()) {
 				$agent->set_snmp_errlev('0');
-			}
-			if ($agent->get_errlev_reset()) {
 				$agent->set_plugin_errlev('0');
 			}
 		}
@@ -175,7 +169,7 @@ $conf->index_html_write($version, $date);
 
 ## begin notification stuff
 ##
-print "notification proccess.\n\n";
+print "notification proccess.\n";
 
 # get data sorted for the get_notification_object_array
 $conf->organize_notification_info();
@@ -235,7 +229,9 @@ sub ping_check {
 		else { 
 			print "\n";
 			if ($agent->get_ping_errlev()) {
-				$agent->set_error_resolved('1');
+				
+			######## should this be here??
+			#	$agent->set_error_resolved('1');
 			}
 			$agent->set_ping_errlev('0'); 
 		} 
@@ -261,7 +257,7 @@ sub http_check {
 		else { 
 			print "\n";
 			if ($agent->get_http_errlev()) {
-				$agent->set_error_resolved('1');
+				#$agent->set_error_resolved('1');
 			}
 			$agent->set_http_errlev('0'); 
 		} 
@@ -296,7 +292,7 @@ sub snmp_check {
 		else { 
 			print "\n";
 			if ($agent->get_snmp_errlev()) {
-				$agent->set_error_resolved('1');
+				#$agent->set_error_resolved('1');
 			}
 			$agent->set_snmp_errlev('0'); 
 		} 
@@ -332,7 +328,7 @@ sub plugin_check {
 		else { 
 			print "\n";
 			if ($agent->get_plugin_errlev()) {
-				$agent->set_error_resolved('1');
+				#$agent->set_error_resolved('1');
 			}
 			$agent->set_plugin_errlev('0'); 
 		} 
