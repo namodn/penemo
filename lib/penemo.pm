@@ -581,7 +581,7 @@ sub get_next_agent {
 	my $agent = $self->_next_agent();
 	unless ($agent)	{ return undef; }
 
-	return penemo::agent::->new( 
+	return penemo::agent->new( 
 					aid             => $agent, 
 					ip              => $self->_ip($agent),
 					name		=> $self->_name($agent),

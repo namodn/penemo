@@ -8,6 +8,14 @@ changes from version 1.0 -> 1.0.1
 	  the notify level). The agent turns (and stays) red once a 
 	  notification has been sent, until the errors resolved, then
 	  it turns back to green.
+	* snmp can now poll a specific ip (using in ip tag on the snmp 
+	  entry for the agent. Before it would poll the agents IP,
+	  but now you can set the snmp poll to be on a different IP
+	  the the agent's default one. (Usefull if your agent has
+	  two interfaces, and snmp bound to one of them).
+	* Fixed a syntax bug when using penemo with an older perl build
+	  (specifically 5.004_04). Reported by Jim Clark.
+	
 
 changes from version 1.0 BETA3 -> 1.0 (stable)
 	* revamped the plugin architecure, uses .pm files now.
@@ -37,40 +45,42 @@ changes from version 1.0 BETA3 -> 1.0 (stable)
 	
 
 changes from version 1.0 BETA2 -> 1.0 BETA3
-	* changed the html output a little, changed some font's and cleaned up 
-	   some layout.
+	* changed the html output a little, changed some font's and cleaned 
+	  up some layout.
 	* fixed a time problem with the penemo-admin.cgi (problem splitting 
-	   date string).
+	  date string).
 	* modified the notification messages to be less "wordy".
 	* made all the little LED's have transparent backgrounds (in case
-	   someone wants to go and change the background to blaring white :)
+	  someone wants to go and change the background to blaring white)
 
 
 changes from version 1.0 BETA1 -> 1.0 BETA2
-	* notify_cap (specifies the cap at which to stop sending notifications).
-	* html display for the configuration options set for each agent (link 
-	   from detailed agent display).
-        * yellow 'warning' light for when an error is detected yet a notification 
-	   is not being sent.  
+	* notify_cap (specifies the cap at which to stop sending 
+          notifications).
+	* html display for the configuration options set for each agent 
+          (link from detailed agent display).
+        * yellow 'warning' light for when an error is detected yet a 
+          notification is not being sent.  
 	* notification bugfix
 
 changes from version 0.7 -> 1.0 BETA1
         * complete code re-structuring (using object oriented design
-           with perl).
+          with perl).
         * tier levels for notification 
         * resolved notification. send page to whatever tier it was on, to let 
-           everyone know the problem is resolved.  
+          everyone know the problem is resolved.  
         * check funtion for plugins.  
         * extensive pausing features 
-	* images instead of colored '*' for warning LED's (thanks to Mike 
-	  Tuller)
+	* images instead of colored '*' for warning LED's. Thanks to Mike 
+	  Tuller for the images.
 
 
 changes from version 0.6 -> 0.7
         * now use Net::Ping module for initial ping check (instead
-           of using the command line ping). Noticed problem with 
-           RedHat 5.2 installs: the ping timeout param wasn't actually 
-           timing out and therefore hung penemo. 
+          of using the command line ping). Problem with RedHat 5.2 
+	  installs: the ping timeout param wasn't actually 
+          timing out and therefore hung penemo. Reported by
+	  Stephanie Wubbena. 
           
 
 changes from version 0.5 -> 0.6
