@@ -3,6 +3,7 @@
 # [!]: need to do  [-]: working on it  [x]: complete  [?]: when i have the time
 #
 
+---
 [x] tier levels for notification
       tier1 emails="emails,emails" increment=(3 bad checks)
       tier2 emails="emails,emails" increment=(3 bad checks)
@@ -40,9 +41,9 @@
     accordingly
 
 
-[-] notify_exec (pain in the ass)
+---
+[!] notify_exec (pain in the ass)
     (note: try notify_exec_name to group by, instead of actual notify_exec)
-
 
 [!] make a function for "quick list of checks(above)" to do colors for if
     errors etc. and display for anywhere by calling the function to incorporate
@@ -58,6 +59,7 @@
     run different queries on the data file etc. 
 
 
+---
 [?] make http its own obj, or something, impliment multi-http checks.
 
 [?] it'd be nice to have some sort of informational page for agent history

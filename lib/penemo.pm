@@ -802,7 +802,8 @@ sub index_html_write {
 		print HTML "<BODY BGCOLOR=\"#000000\" TEXT=\"#338877\" "; 
 		print HTML "LINK=\"#AAAAAA\" VLINK=\"#AAAAAA\">\n"; 
 		print HTML "<CENTER>\n"; 
-		print HTML "\t<FONT SIZE=3><B><FONT COLOR=\"#CC11AA\">penemo</FONT> "; 
+		print HTML "<FONT SIZE=3><B>", $self->get_instance_name(), "</B></FONT><BR>\n";
+		print HTML "\t<FONT SIZE=2><B><FONT COLOR=\"#CC11AA\">penemo</FONT> "; 
 		print HTML "version $version</B></FONT><BR>\n"; 
 		#print HTML "<HR WIDTH=60%>\n"; 
 		print HTML "<FONT SIZE=2>penemo last run: <FONT COLOR=\"#AAAAAA\">$date</FONT></FONT><BR>\n"; 
