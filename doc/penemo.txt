@@ -24,16 +24,14 @@ SUPPORTED ARCHITECHURES
 
  penemo was developed on a Debian GNU/Linux system. And has only been tested
  with Linux and FreeBSD. However, it should theoretically run fine on any UNIX
- system that has Perl and UCD-SNMP installed.
-
- please send me an email if you have gotten penemo to run on any OS besides
- Linux or FreeBSD, so I can add it to the list of tested platforms.
+ system that Perl and UCD-SNMP can compile on.
 
 
 
 INSTALLATION
 
  for installation instructions please read the install.txt
+
 
 
 CONFIGURATION
@@ -96,7 +94,7 @@ BUG REPORTS ETC.
  Nick Jennings, <nick@namodn.com>
 
  penemos homepage is located at: 
-   http://www.communityprojects.org/apps/penemo/
+   http://www.penemo.org
 
 
 
