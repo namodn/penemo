@@ -577,19 +577,6 @@ sub organize_notification_info {
 		}
 		
 
-		if ($agent->get_error_resolved()) {
-			print "$ip, resolved problem\n";
-			$self->{notification_org}{$email}{$ip}{resolved} = '1';
-			$agent->set_notifications_sent('0');
-			$agent->set_current_tier('1');
-		}
-		else {
-			$self->{notification_org}{$email}{$ip}{resolved} = '0';
-			$agent->set_have_notifications_been_sent('1');
-			$agent->set_notifications_sent('+');
-		}
-
-		
 		unless ($method eq 'exec') {
 			$self->{notification_org}{$email}{$ip}{ping_check} = 
 					$agent->ping_check(); 
@@ -715,6 +702,20 @@ sub organize_notification_info {
 			# global setting for each notification message (object)
 			$self->{notification_org}{notify}{current_tier} = $agent->get_current_tier();
 		}
+
+		if ($agent->get_error_resolved()) {
+			print "$ip, resolved problem\n";
+			$self->{notification_org}{$email}{$ip}{resolved} = '1';
+			$agent->set_notifications_sent('0');
+			$agent->set_current_tier('1');
+		}
+		else {
+			$self->{notification_org}{$email}{$ip}{resolved} = '0';
+			$agent->set_have_notifications_been_sent('1');
+			$agent->set_notifications_sent('+');
+		}
+
+		
 	}
 }
 
