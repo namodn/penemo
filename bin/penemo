@@ -97,7 +97,7 @@ foreach my $agent (@agents) {
 			$agent->set_error_resolved('1');
 		}
 		# no errors detected, reset all tracking data. 
-		#$agent->set_notifications_sent('0');
+		$agent->set_notifications_sent('0');
 		#$agent->set_current_tier('0');
 	}
 }
