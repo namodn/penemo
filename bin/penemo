@@ -76,13 +76,16 @@ foreach my $agent (@agents) {
 	&ping_check($agent);
 	&http_check($agent);
 	&snmp_check($agent);
+	&plugin_check($agent);
 
 #	$thread1 = async { &snmp_check($agent); }; 
-#	$thread2 = async { &ping_check($agent); }; 
-#	$thread3 = async { &http_check($agent); }; 
+#	$thread2 = async { &plugin_check($agent); }; 
+#	$thread3 = async { &ping_check($agent); }; 
+#	$thread4 = async { &http_check($agent); }; 
 #
-#	$thread2->join;
 #	$thread3->join;
+#	$thread4->join;
+#	$thread2->join;
 #	$thread1->join;
 
 	# write agent html
@@ -100,6 +103,7 @@ foreach my $agent (@agents) {
 	}
 	else {
 		# no errors detected
+		print " should both be true: ", $agent->get_check_status(), $agent->have_notifications_been_sent(), "\n";
 		if ( ($agent->get_check_status()) && ($agent->have_notifications_been_sent()) ) {
 			# notifications have been sent, but now, no errors detected.
 			# add to notification stack, for resolved notification.
@@ -272,3 +276,45 @@ sub snmp_check {
 	}
 }
 
+sub plugin_check {
+	my $agent = $_[0];
+	my $ip = $agent->get_ip();
+
+	if ($agent->plugin_check()) {
+		print "  $ip: plugin status  : "; 
+		$agent->plugin($conf->get_plugin_dir());
+
+		my @plugin_mods = split(/ /, $agent->get_plugin_mods());
+		my $plugin_errlev = 1;
+		foreach my $mod (@plugin_mods) {
+			print "$mod=", $agent->get_plugin_status($mod), " ";
+
+			unless ($agent->get_plugin_status($mod)) { 
+				$plugin_errlev = '0';
+			}
+		}
+
+		unless ($plugin_errlev) {
+			print "  errlev: ", $agent->get_plugin_errlev(), "\n";
+
+			if ($agent->get_plugin_errlev() >= $agent->get_notify_level()) 
+			{ 
+				$agent->set_error_detected(); 
+				if ($agent->get_errlev_reset()) {
+					$agent->set_plugin_errlev('0');
+				}
+			}
+		}
+		else { 
+			print "\n";
+			if ($agent->get_plugin_errlev()) {
+				$agent->set_error_resolved('1');
+			}
+			$agent->set_plugin_errlev('0'); 
+		} 
+	}
+	else {
+		$agent->set_plugin_errlev('0'); 
+	
+	}
+}
