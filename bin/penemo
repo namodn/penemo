@@ -1,0 +1,267 @@
+#!/usr/bin/perl -w
+#
+#  penemo (Perl Network Monitor)
+#  Copyright (C) 2000 Nick Jennings
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+#
+#  This program is developed and maintained by Nick Jennings.
+# Contact Information:
+#
+#    Nick Jennings                 nick@namodn.com
+#    PMB 377                       http://nick.namodn.com
+#    4096 Piedmont Ave.
+#    Oakland, CA 94611
+#
+#  penemo homepage : http://www.communityprojects.org/apps/penemo/
+#
+#
+
+use strict;
+use IO::Handle;
+
+# penemo specific modules
+use lib '/home/nick/devel/penemo/modules/';
+
+use penemo;
+
+my $version = '1.0';
+my $date = `date`;
+my $penemo_conf_file = '/home/nick/devel/penemo/conf/penemo.conf';
+my $agent_conf_file  = '/home/nick/devel/penemo/conf/agent.conf';
+
+# create conf object
+print "loading configuration files.\n";
+my $conf = penemo::config->load_config($penemo_conf_file, $agent_conf_file);
+
+print "begining agent checks.\n";
+print "  1 = good.   0 = bad.\n";
+
+my @agents;
+
+while () {
+	# initialize $agent objref
+	last unless ( my $agent = $conf->get_next_agent() );
+
+	# stack agents
+	push @agents, $agent;
+
+}
+
+# foreach agent, perform the run down
+foreach my $agent (@agents) {
+	my $ip = $agent->get_ip();
+
+	# load persistent data ( error levels etc. ) into $agent object
+	print "  $ip: loading agent data.\n";
+	$agent->load_persistent_data($conf->get_data_dir());
+
+	# perform check functions
+	&ping_check($agent);
+	&http_check($agent);
+	&snmp_check($agent);
+
+	# write agent html
+	print "  $ip: writing agents html file.\n";
+	$agent->agent_html_write( $conf->get_html_dir() );
+	# add to list of agents for index html
+	$conf->push_html_agentlist($agent);
+
+	if ($agent->get_error_detected()) { 
+		# the error_detected method gets set true in any of the check functions above.
+		# error is detected, add to notification stack
+		print "  $ip: error(s) detected adding to notification stack.\n";
+		$conf->push_notification_stack($agent);
+		$agent->set_have_notifications_been_sent('1');
+	}
+	else {
+		# no errors detected
+		if ( ($agent->get_check_status()) && ($agent->have_notifications_been_sent()) ) {
+			# notifications have been sent, but now, no errors detected.
+			# add to notification stack, for resolved notification.
+			$conf->push_notification_stack($agent);	
+			print "  $ip: error(s) resolved.\n";
+			# error on this agent has been resolved
+			$agent->set_error_resolved('1');
+		}
+		# no errors detected, reset all tracking data. 
+		#$agent->set_notifications_sent('0');
+		#$agent->set_current_tier('0');
+	}
+}
+
+# print total agents loaded
+print "total agents created  : ", penemo::agent->get_total_count(), "\n";
+
+# writing index.html for agent
+print "writing index html data.\n";
+$conf->index_html_write($version, $date);
+
+
+## begin notification stuff
+##
+print "notification proccess.\n\n";
+
+# get data sorted for the get_notification_object_array
+$conf->organize_notification_info();
+# get list of notification objects
+my @notification_objects = $conf->get_notification_object_array();
+
+# save current error levels to file for next time
+# done here because get_notification_objects_array modifies errlevs
+foreach my $agent (@agents) {
+	# write current errorlevels to file
+	#print "  ", $agent->get_ip(), ": writing agent data.\n";
+	$agent->write_persistent_data($conf->get_data_dir());
+}
+
+# loop through notification objects
+foreach my $notify (@notification_objects) {
+	if ($notify->get_method() eq 'exec') {
+		$notify->execute();
+		next;
+	}
+	elsif ($notify->get_method() eq 'resolved') {
+		$notify->resolved();
+		next;
+	}
+	
+	print "notification msg sent to: ", $notify->get_method(), "\n";
+	$notify->email($conf->get_instance_name(), $version);
+}
+
+print "completed checks, exiting...\n";
+exit;
+
+
+
+
+###################
+## subroutines
+##
+
+# agent check subroutine, takes the $agent reference as a parameter.
+sub ping_check {
+	my $agent = $_[0];
+	my $ip = $agent->get_ip();
+
+	my $add_to_notification_stack = 0;
+	if ($agent->ping_check()) {
+		print "  $ip: ping status  : "; 
+		$agent->ping();
+		print $agent->get_ping_status(), "\n";
+
+		unless ($agent->get_ping_status()) { 
+
+print "error ping_lev: ", $agent->get_ping_errlev(), 
+      " notify: ", $agent->get_notify_level(), 
+      " reset: ", $agent->get_errlev_reset(), "\n";
+
+			if ($agent->get_ping_errlev() >= $agent->get_notify_level()) { 
+				$agent->set_error_detected(); 
+				if ($agent->get_errlev_reset()) {
+					$agent->set_ping_errlev('0');
+				}
+			}
+		}
+		else { 
+			if ($agent->get_ping_errlev()) {
+				$agent->set_error_resolved('1');
+			}
+			$agent->set_ping_errlev('0'); 
+		} 
+	}
+	else {
+		$agent->set_ping_errlev('0'); 
+	}
+}
+
+sub http_check {
+	my $agent = $_[0];
+	my $ip = $agent->get_ip();
+
+	if ($agent->http_check()) {
+		print "  $ip: http status  : "; 
+		$agent->http( $conf->get_http_command(), $conf->get_cache_dir() );
+		print $agent->get_http_status(), "\n";
+
+		unless ($agent->get_http_status()) { 
+
+print "error http_lev: ", $agent->get_http_errlev(), 
+      " notify: ", $agent->get_notify_level(), 
+      " reset: ", $agent->get_errlev_reset(), "\n";
+
+			if ($agent->get_http_errlev() >= $agent->get_notify_level()) { 
+				$agent->set_error_detected(); 
+				if ($agent->get_errlev_reset()) {
+					$agent->set_http_errlev('0');
+				}
+			}
+		}
+		else { 
+			if ($agent->get_http_errlev()) {
+				$agent->set_error_resolved('1');
+			}
+			$agent->set_http_errlev('0'); 
+		} 
+	}
+	else {		
+		$agent->set_http_errlev('0'); 
+	}
+}
+
+sub snmp_check {
+	my $agent = $_[0];
+	my $ip = $agent->get_ip();
+
+	if ($agent->snmp_check()) {
+		print "  $ip: snmp status  : "; 
+		$agent->snmp($conf->get_plugin_dir(), $conf->get_ucd_bin_dir());
+
+		my @snmp_mibs = split(/ /, $agent->get_snmp_mibs());
+		my $snmp_errlev = 1;
+		foreach my $mib (@snmp_mibs) {
+			print "$mib=", $agent->get_snmp_status($mib), " ";
+
+			unless ($agent->get_snmp_status($mib)) { 
+				$snmp_errlev = '0';
+			}
+		}
+		print "\n";
+
+		unless ($snmp_errlev) {
+print "error snmp_lev: ", $agent->get_snmp_errlev(), 
+      " notify: ", $agent->get_notify_level(), 
+      " reset: ", $agent->get_errlev_reset(), "\n";
+			if ($agent->get_snmp_errlev() >= $agent->get_notify_level()) 
+			{ 
+				$agent->set_error_detected(); 
+				if ($agent->get_errlev_reset()) {
+					$agent->set_snmp_errlev('0');
+				}
+			}
+		}
+		else { 
+			if ($agent->get_snmp_errlev()) {
+				$agent->set_error_resolved('1');
+			}
+			$agent->set_snmp_errlev('0'); 
+		} 
+	}
+	else {
+		$agent->set_snmp_errlev('0'); 
+	}
+}
+
