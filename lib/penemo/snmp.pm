@@ -38,7 +38,7 @@
 
 package penemo::snmp;
 
-use lib '/home/nick/devel/penemo/modules/';
+use lib '/usr/local/share/penemo/modules/';
 
 use strict;
 
