@@ -274,7 +274,7 @@ sub snmp_check {
 		my @snmp_mibs = split(/ /, $agent->get_snmp_mibs());
 		my $snmp_errlev = 1;
 		foreach my $mib (@snmp_mibs) {
-			print "$mib=", $agent->get_snmp_status($mib), " ";
+			print "$mib:", $agent->get_snmp_status($mib), " ";
 
 			unless ($agent->get_snmp_status($mib)) { 
 				$snmp_errlev = '0';
@@ -310,7 +310,7 @@ sub plugin_check {
 		my @plugin_mods = split(/ /, $agent->get_plugin_mods());
 		my $plugin_errlev = 1;
 		foreach my $mod (@plugin_mods) {
-			print "$mod=", $agent->get_plugin_status($mod), " ";
+			print "$mod:", $agent->get_plugin_status($mod), " ";
 
 			unless ($agent->get_plugin_status($mod)) { 
 				$plugin_errlev = '0';

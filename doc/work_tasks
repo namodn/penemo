@@ -21,8 +21,10 @@
 
 [x] extensive pausing features
 
+[x] snmp mibs dont have a way to notify on snmp alerts within mib check.
 
-[-] snmp mibs dont have a way to notify on snmp alerts within mib check.
+
+[-] don't forget notify exec
 
 
 [!] make it so notifications reset <type>_errlev, so that there arent
