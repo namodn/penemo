@@ -1,7 +1,7 @@
 
  ******************************************************************
  **                                                              **
- **       installation script for penemo: v1.0 BETA2             **
+ **       installation script for penemo: 1.0.1                  **
  **                                                              **
  **  execute all commands as ROOT unless specified otherwise.    **
  **                                                              **
@@ -43,9 +43,9 @@
  \--------------
 
         # mkdir /usr/local/share/penemo
-        # cp -r modules/ /usr/local/share/penemo/
-        # cp -r plugins/ /usr/local/share/penemo/
+        # cp -r lib/ /usr/local/share/penemo/
         # cp -r doc/ /usr/local/share/penemo/
+        # cp -r exec/ /usr/local/share/penemo/
 
 	# mkdir /usr/local/share/penemo/data
 	# chown <penemo user>:<httpd user> /usr/local/share/penemo/data
@@ -55,10 +55,10 @@
      penemo user should be root (run as root). and httpd user is
    whatever the httpd daemon runs as (debian: www-data, freebsd: nobody).
 
-        # cp -r html/ <value of html_dir in penemo.conf> 
+        # cp -r html/ <value of dir_html in penemo.conf> 
   -note:
-   by default html is located in /usr/local/share/penemo/
-
+     make sure that the images in html/images/ are readable by your
+   webserver etc.
 
  /--
  | installing: cgi functionality 

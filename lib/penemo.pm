@@ -1070,8 +1070,13 @@ sub email {
 			print MAIL "$line\n"; 
 		}
 		print MAIL "\n"; 
-		print MAIL "tier level: ", $self->_get_tier(), "\n";
-		print MAIL "tier email: $to\n";
+		if ($self->_get_tier()) {
+			print MAIL "tier level: ", $self->_get_tier(), "\n";
+			print MAIL "tier email: $to\n";
+		}
+		else {
+			print MAIL "email: $to\n";
+		}
 	close MAIL; 
 
 	print "--\n"; 
@@ -1079,8 +1084,14 @@ sub email {
 		print "$line\n"; 
 	}
 	print "\n";
-	print "tier level: ", $self->_get_tier(), "\n";
-	print "tier email: $to\n";
+	if ($self->_get_tier()) {
+		print "tier level: ", $self->_get_tier(), "\n";
+		print "tier email: $to\n";
+	}
+	else {
+		print "email: $to\n";
+	}
+		
 	print "--\n";
 
 }

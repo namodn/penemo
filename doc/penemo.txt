@@ -1,4 +1,4 @@
-penemo version: 1.0 beta2
+penemo version: 1.0.1
 
 Developed and Maintained,
 by: Nick Jennings, nick@namodn.com
@@ -85,6 +85,38 @@ RUNNING PENEMO
  this configuration runs penemo every 5 minutes and pipes all output to
  /dev/null (otherwise it gets sent to root@localhost I believe).
 
+
+
+CHECK PLUGINS
+
+ penemo plugins are a way for the administrator to write scripts to do
+ custom checks, and integrate the results into penemo (centralized 
+ monitoring management).
+
+ please read the doc/plugins.txt for more information.
+
+
+
+NOTIFY EXEC
+
+ The notify_exec function in penemo is still in development, yet it
+ is (as far as I know) completely functional and works fine (I'll
+ wait and see if I get any bug reports). The way you use it is
+ to have a script in the exec directory (specified in the penemo.conf
+ with the dir_exec directive: by default it's in /usr/local/share/penemo/exec)
+ this script will be called (no command line parameters) and the errors
+ will be given on the STDIN. (note: the example script in the exec dir
+ that comes with this program is a good working base to work from). From
+ there you can do whatever you want, dial out on a modem, establish some
+ socket connection somewhere etc. you have the error list to play with.
+
+ The way you enable the notify exec in penemo is to edit the penemo.conf
+ change the notify_method for whichever tier level you are planning to
+ use the script for to exec instead of email. Then uncomment the 
+ notify_exec_<whichever tier you wanted> line and as its value, enter
+ the name of the file. NOTE: one word, no spaces, no command line params.
+ If this filename exists in the dir_exec, everything shoudl go fine.
+ 
 
 
 BUG REPORTS ETC.

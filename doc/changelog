@@ -1,5 +1,8 @@
 penemo changelog
 
+changes from version 1.0 -> 1.0.1
+	* minor corrections to some code
+	* minor corrections and additions to documentation
 
 changes from version 1.0 BETA3 -> 1.0 (stable)
 	* revamped the plugin architecure, uses .pm files now.
@@ -9,7 +12,7 @@ changes from version 1.0 BETA3 -> 1.0 (stable)
 	  improved incredibly. Look for inclusions of some of them in
 	  the next release hopefully.
 	* fixed notify_exec now, should work. Use it as you would notify_email.
-	# added pause functionality configuration, you can now move the pause
+	* added pause functionality configuration, you can now move the pause
 	  function to the main page (less clicks).
 	* you can now pause as long as you like from the web interface 
 	  (a good security tip is to make .htaccess authentication for
