@@ -31,7 +31,6 @@
 
 use strict;
 use IO::Handle;
-#use Thread qw(async);
 
 # penemo specific modules
 use lib '/home/nick/devel/penemo/modules/';
@@ -78,16 +77,6 @@ foreach my $agent (@agents) {
 	&snmp_check($agent);
 	&plugin_check($agent);
 
-#	$thread1 = async { &snmp_check($agent); }; 
-#	$thread2 = async { &plugin_check($agent); }; 
-#	$thread3 = async { &ping_check($agent); }; 
-#	$thread4 = async { &http_check($agent); }; 
-#
-#	$thread3->join;
-#	$thread4->join;
-#	$thread2->join;
-#	$thread1->join;
-
 	# write agent html
 	print "  $ip: writing agents html file.\n";
 	$agent->agent_html_write( $conf->get_html_dir() );
@@ -95,11 +84,46 @@ foreach my $agent (@agents) {
 	$conf->push_html_agentlist($agent);
 
 	if ($agent->get_error_detected()) { 
-		# the error_detected method gets set true in any of the check functions above.
-		# error is detected, add to notification stack
-		print "  $ip: error(s) detected adding to notification stack.\n";
-		$conf->push_notification_stack($agent);
-		$agent->set_have_notifications_been_sent('1');
+		my $stack = 0;   # true if agent is to be stacked.
+		if ($agent->ping_check()) {
+			if ($agent->get_ping_errlev() >= $agent->get_notify_level()) {
+				$stack = 1;
+				# reset errlev if set to do so.
+				if ($agent->get_errlev_reset()) {
+					$agent->set_ping_errlev('0');
+				}
+
+			}
+		}
+		if ($agent->http_check()) {
+			if ($agent->get_http_errlev() >= $agent->get_notify_level()) {
+				$stack = 1;
+				# reset errlev if set to do so.
+				if ($agent->get_errlev_reset()) {
+					$agent->set_http_errlev('0');
+				}
+			}
+		}
+		if ($agent->snmp_check()) {
+			if ($agent->get_snmp_errlev() >= $agent->get_notify_level()) {
+				$stack = 1;
+				# reset errlev if set to do so.
+				if ($agent->get_errlev_reset()) {
+					$agent->set_snmp_errlev('0');
+				}
+			}
+		}
+		if ($agent->plugin_check()) {
+			if ($agent->get_plugin_errlev() >= $agent->get_notify_level()) {
+				$stack = 1;
+				# reset errlev if set to do so.
+				if ($agent->get_errlev_reset()) {
+					$agent->set_plugin_errlev('0');
+				}
+			}
+		}
+
+		if ($stack)	{ &add_to_notify_stack($agent); }	
 	}
 	else {
 		# no errors detected
@@ -180,13 +204,7 @@ sub ping_check {
 
 		unless ($agent->get_ping_status()) { 
  			print "\terrlev: ", $agent->get_ping_errlev(), "\n";
-
-			if ($agent->get_ping_errlev() >= $agent->get_notify_level()) { 
-				$agent->set_error_detected(); 
-				if ($agent->get_errlev_reset()) {
-					$agent->set_ping_errlev('0');
-				}
-			}
+			$agent->set_error_detected(); 
 		}
 		else { 
 			print "\n";
@@ -212,13 +230,7 @@ sub http_check {
 
 		unless ($agent->get_http_status()) { 
  			print "  errlev: ", $agent->get_http_errlev(), "\n";
-
-			if ($agent->get_http_errlev() >= $agent->get_notify_level()) { 
-				$agent->set_error_detected(); 
-				if ($agent->get_errlev_reset()) {
-					$agent->set_http_errlev('0');
-				}
-			}
+			$agent->set_error_detected(); 
 		}
 		else { 
 			print "\n";
@@ -253,14 +265,7 @@ sub snmp_check {
 
 		unless ($snmp_errlev) {
 			print "  errlev: ", $agent->get_snmp_errlev(), "\n";
-
-			if ($agent->get_snmp_errlev() >= $agent->get_notify_level()) 
-			{ 
-				$agent->set_error_detected(); 
-				if ($agent->get_errlev_reset()) {
-					$agent->set_snmp_errlev('0');
-				}
-			}
+			$agent->set_error_detected(); 
 		}
 		else { 
 			print "\n";
@@ -279,6 +284,7 @@ sub plugin_check {
 	my $agent = $_[0];
 	my $ip = $agent->get_ip();
 
+
 	if ($agent->plugin_check()) {
 		print "  $ip: plugin status  : "; 
 		$agent->plugin($conf->get_plugin_dir());
@@ -295,14 +301,7 @@ sub plugin_check {
 
 		unless ($plugin_errlev) {
 			print "  errlev: ", $agent->get_plugin_errlev(), "\n";
-
-			if ($agent->get_plugin_errlev() >= $agent->get_notify_level()) 
-			{ 
-				$agent->set_error_detected(); 
-				if ($agent->get_errlev_reset()) {
-					$agent->set_plugin_errlev('0');
-				}
-			}
+			$agent->set_error_detected(); 
 		}
 		else { 
 			print "\n";
@@ -316,4 +315,13 @@ sub plugin_check {
 		$agent->set_plugin_errlev('0'); 
 	
 	}
+}
+
+
+sub add_to_notify_stack {
+	my $agent = $_[0];
+	my $ip = $agent->get_ip();
+	print "  $ip: error(s) detected adding to notification stack.\n";
+	$conf->push_notification_stack($agent);
+	$agent->set_have_notifications_been_sent('1');
 }

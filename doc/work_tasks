@@ -14,11 +14,12 @@
 
 [x] html output for agents and the index of agents.
 
+[x] add another check funtion for plugins.
+
 [-] extensive pausing features
 
 [-] replace all dies and errors with notify functionality.
 
-[-] add another check funtion for plugins.
 
 [!] make it so notifications reset <type>_errlev, so that there arent
       overlapping counts from different checks in same agent, resulting
