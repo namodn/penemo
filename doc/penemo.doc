@@ -33,25 +33,7 @@ SUPPORTED ARCHITECHURES
 
 INSTALLATION
 
- installation of penemo is fairly simple. as root, run the install script.
-
- the install script performs the following funtions (as root), if you are 
- having problems, you can perform the install by hand.
-
-        <as root>
-        # umask 002
-        # mkdir /usr/local/etc/penemo
-        # cp conf/*.conf /usr/local/etc/penemo/
-
-        # cp penemo /usr/local/sbin/
-        # chmod u=rwx,g=rwx,o= /usr/local/sbin/penemo
-
-        # mkdir /usr/local/share/penemo
-        # mkdir /usr/local/share/penemo/cache
-        # mkdir /usr/local/share/penemo/html
-        # mkdir /usr/local/share/penemo/html/agentdump
-        # mkdir /usr/local/share/penemo/html/agents
-
+ for installation instructions please read the install.txt
 
 
 CONFIGURATION
