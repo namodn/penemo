@@ -105,6 +105,7 @@ sub poll {
 	my $test = '';
 	my @agentdump = ();
 	my @htmldump = ();
+	my @miberrors = ();
 	foreach my $line (@output) {
 		if ($line =~ '--agentdump') {
 			$test = '1';
@@ -114,6 +115,11 @@ sub poll {
 			$test = '2';
 			next;
 		}
+		elsif ($line =~ '--miberrors') {
+print "MIB ERRORS line DETECTED\n";
+			$test = '3';
+			next;
+		}
 
 		if ($test == '1') {
 			push @agentdump, $line; 	
@@ -121,15 +127,27 @@ sub poll {
 		elsif ($test == '2') {
 			push @htmldump, $line;
 		}
+		elsif ($test == '3') {
+			push @miberrors, $line;
+		}
 	}
 
 	unless ((@agentdump) && (@htmldump)) {
-		penemo::core->notify_die("internal error in snmp.pm\n");
+		$self->{status} = 0;
+		$self->{message} = "internal error in snmp.pm (no information returned)\n";
 	}
-
-	$self->{status} = 1;
-	$self->{html} = "@htmldump";
-	$self->{message} = "@agentdump";
+	elsif (@miberrors) {
+print "MIB ERRORS DETECTED\n";
+		$self->{status} = 0;
+		$self->{message} = "@miberrors";
+		$self->{walk} = "@agentdump";
+		$self->{html} = "@htmldump";
+	}
+	else {
+		$self->{status} = 1;
+		$self->{html} = "@htmldump";
+		$self->{walk} = "@agentdump";
+	}
 	return;
 }
 
@@ -143,6 +161,10 @@ sub message {
 
 sub html {
 	$_[0]->{html};
+}
+
+sub walk {
+	$_[0]->{walk};
 }
 
 1;

@@ -851,6 +851,7 @@ sub new {
 			http_errlev		=> '0',
                         snmp_status		=> {},
 			snmp_errlev		=> '0',
+			snmp_walk		=> {},
                         snmp_message		=> {},
 			snmp_html		=> {},
                         plugin_status		=> {},
@@ -1045,6 +1046,10 @@ sub get_snmp_message {
 	$self->{snmp_message}{$mib}; 
 
 }
+sub get_snmp_walk {
+	my ($self, $mib) = @_;
+	$self->{snmp_walk}{$mib}; 
+}
 sub get_snmp_errlev             { $_[0]->{snmp_errlev} }
 sub get_snmp_mibs		{ $_[0]->{snmp_mibs} }
 sub get_snmp_community		{ $_[0]->{snmp_community} }
@@ -1122,6 +1127,10 @@ sub _set_http_search_message {
 sub _set_snmp_message {
 	my ($self, $mib, $set) = @_;
 	$self->{snmp_message}{$mib} = $set;
+}
+sub _set_snmp_walk {
+	my ($self, $mib, $set) = @_;
+	$self->{snmp_walk}{$mib} = $set;
 }
 sub _set_snmp_status {
 	my ($self, $mib, $set) = @_;
@@ -1318,11 +1327,14 @@ sub snmp {
 		unless ($snmp->status()) {
 			$self->_set_snmp_status($mib, '0');
 			$self->_set_snmp_message($mib, $snmp->message());
+			$self->_set_snmp_walk($mib, $snmp->walk());
+			$self->_set_snmp_html($mib, $snmp->html());
 			$error_detected = 1;
 		}
 		else {
 			$self->_set_snmp_status($mib, '1');
 			$self->_set_snmp_message($mib, $snmp->message());
+			$self->_set_snmp_walk($mib, $snmp->walk());
 			$self->_set_snmp_html($mib, $snmp->html());
 		}
 	}
@@ -1401,9 +1413,9 @@ sub agent_html_write
 		foreach my $mib (@mibs) {
 			if (-f "$html_dir/agentdump/$ip") {
 			}
-			penemo::core->file_write(">>$html_dir/agentdump/$ip", $self->get_snmp_message($mib));
+			penemo::core->file_write(">>$html_dir/agentdump/$ip", $self->get_snmp_walk($mib));
 		}
-		print HTML "[<A HREF=\"$html_dir/agentdump/$ip\">current snmp info</A>]<BR>\n"; 
+		print HTML "[<A HREF=\"../../agentdump/$ip\">current snmp info</A>]<BR>\n"; 
 	} 
 	
 	print HTML "</CENTER>\n"; 
@@ -1411,19 +1423,21 @@ sub agent_html_write
 	
 	# ping info 
 	# 
-	unless ($self->get_ping_status()) { 
-		$self->set_index_error_detected();
-		print HTML "<FONT COLOR=\"#AAAAAA\" SIZE=1><I>PING</I></FONT><BR>\n";
-		print HTML "$bad_light\n";
-		print HTML "<FONT COLOR=\"#DD1111\">Can't ping $ip !! "; 
-		print HTML "Machine might be down!</FONT><BR>\n"; 
-		print HTML "<BR>\n";
-	} 
-	elsif ($self->ping_check()) { 
-		print HTML "<FONT COLOR=\"#AAAAAA\" SIZE=1><I>PING</I></FONT><BR>\n";
-		print HTML "$ok_light\n"; 
-		print HTML "<FONT COLOR=\"#11AA11\">", $self->get_ping_message(), "</FONT><BR>\n"; 
-		print HTML "<BR>\n";
+	if ($self->ping_check()) { 
+		unless ($self->get_ping_status()) { 
+			$self->set_index_error_detected();
+			print HTML "<FONT COLOR=\"#AAAAAA\" SIZE=1><I>PING</I></FONT><BR>\n";
+			print HTML "$bad_light\n";
+			print HTML "<FONT COLOR=\"#DD1111\">Can't ping $ip !! "; 
+			print HTML "Machine might be down!</FONT><BR>\n"; 
+			print HTML "<BR>\n";
+		} 
+		else {
+			print HTML "<FONT COLOR=\"#AAAAAA\" SIZE=1><I>PING</I></FONT><BR>\n";
+			print HTML "$ok_light\n"; 
+			print HTML "<FONT COLOR=\"#11AA11\">", $self->get_ping_message(), "</FONT><BR>\n"; 
+			print HTML "<BR>\n";
+		}
 	} 
 
 	# http info
@@ -1473,10 +1487,12 @@ sub agent_html_write
 		print HTML "<FONT COLOR=\"#AAAAAA\" SIZE=1><I>SNMP</I></FONT><BR>\n";
 
 		foreach my $mib (@mibs) {
-			if ($self->get_snmp_status($mib)) {
+			if ($self->_print_snmp_html($mib)) {
+print "is html\n";
 				print HTML $self->_print_snmp_html($mib);
 			}
 			else {
+print "isnt html\n";
 				$self->set_index_error_detected();
 				print HTML "$bad_light\n";
 				print HTML "<FONT COLOR=\"#DD1111\"> ", $self->get_snmp_message($mib),
