@@ -16,9 +16,10 @@
 
 [x] add another check funtion for plugins.
 
-[-] extensive pausing features
+[x] replace all dies and errors with notify functionality.
 
-[-] replace all dies and errors with notify functionality.
+
+[-] extensive pausing features
 
 
 [!] make it so notifications reset <type>_errlev, so that there arent
