@@ -130,7 +130,7 @@ sub _penemo_config
 		notify_exec_2	=> '',
 		notify_exec_3	=> '',
 		instance_name	=> 'default instance',
-		http_command    => 'snarf',
+		http_command    => 'wget',
 		snmp_community  => 'public',
 		ping_timeout    => '1',
 		html_dir        => '/usr/local/share/penemo/html',
@@ -647,6 +647,7 @@ sub index_html_write {
 		print HTML "penemo last run: <FONT COLOR=\"#AAAAAA\">$date</FONT><BR>\n"; 
 		print HTML "</CENTER>\n"; 
 
+		print HTML "<FORM method=\"Post\" action=\"/cgi-bin/penemo-admin.cgi\">\n";
 		foreach my $group (@grouplist) { 
 			print HTML "<FONT SIZE=4><B>$group</B><BR>\n"; 
 			print HTML "<FONT SIZE=3 COLOR=\"#AAAAAA\">\n"; 
@@ -662,13 +663,20 @@ sub index_html_write {
 					print HTML "<A HREF=\"agents/$ip/index.html\">$ip</A> ",
 						" &nbsp "; 
 					print HTML "<FONT COLOR=\"#CCDDAA\"><B>",
-						$agent->get_name(), "</B></FONT> &nbsp<BR>\n"; 
+						$agent->get_name(), "</B></FONT> &nbsp\n", 
+						"<INPUT TYPE=text NAME=\"pause\" SIZE=5>";
+
+					print HTML "&nbsp &nbsp ";
+					print HTML "<FONT COLOR=\"#000000\">",
+						"<INPUT TYPE=Submit NAME=pause VALUE=pause>",
+						"</FONT><BR>\n"; 
 				} 
 			} 
 			print HTML "&nbsp;<BR>\n"; 
 			print HTML "</FONT>\n"; 
 		} 
 
+		print HTML "</FORM>\n";
 		print HTML "&nbsp;<BR>\n"; 
 		print HTML "<HR WIDTH=50%>\n"; 
 		print HTML "<CENTER>\n"; 
