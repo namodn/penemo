@@ -45,6 +45,11 @@
     on main page as well as config page, etc.
 
 ---
+
+[!] change UID from IP to real UID (just a unique word i.e. SECURE2)
+
+[!] add ping $ip  so the pings arent agent ip specific
+
 [!] notify_exec (pain in the ass)
     (note: try notify_exec_name to group by, instead of actual notify_exec)
 

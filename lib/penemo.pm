@@ -79,6 +79,9 @@ sub html_image {
 	elsif ($name eq 'warn') {
 		return ("<IMG SRC=\"$path/yellow_button.jpg\" BORDER=0 ALT=\"yellow\">");
 	}
+	elsif ($name eq 'pause_submit') {
+		return ("$path/pause_submit.jpg");
+	}
 	else {
 		return ("* "); 
 	} 
@@ -843,7 +846,7 @@ sub index_html_write {
 		print HTML "</CENTER>\n"; 
 
 		print HTML "<FORM method=\"Post\" action=\"$cgi_bin/penemo-admin.cgi\">\n";
-		print HTML "<TABLE WITH=600 ALIGN=CENTER BORDER=0>\n";
+		print HTML "<TABLE WITH=600 ALIGN=CENTER BORDER=0 CELLPADDING=4>\n";
 
 		if (($self->get_pause_global()) && ($self->get_pause_web())) {
 			my $iplist = '';
@@ -856,7 +859,7 @@ sub index_html_write {
 			}
 			
 			print HTML "<TR><TD WIDTH=600 ALIGN=CENTER COLSPAN=4>\n";
-			print HTML "&nbsp;<BR>\n";
+			#print HTML "&nbsp;<BR>\n";
 
 			print HTML "<FONT COLOR=#3366FF SIZE=2>";
 			print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=", $iplist, "&pause=1\">";
@@ -940,21 +943,23 @@ sub index_html_write {
 					
 					if ( (! $agent->get_paused()) && ($self->get_pause_web()) && ($self->get_pause_box_index()) ) {
 						print HTML "<FORM METHOD=\"Post\" action=\"/cgi-bin/penemo-admin.cgi\">\n";
-						print HTML '<INPUT TYPE=SUBMIT NAME=pause VALUE=', $ip, '><BR>', "\n";
-						print HTML '<FONT SIZE=2><FONT COLOR="#6666FF">pause format:</FONT> DD:HH:MM</FONT><BR>', "\n";
-						print HTML '<INPUT type=text name="time" size=10 maxlength=10><BR>', "\n";
-						print HTML '</FORM><BR>', "\n";
+						print HTML '<INPUT TYPE=HIDDEN NAME=agent VALUE=', $ip, '>', "\n";
+						print HTML '<INPUT TYPE=HIDDEN NAME=pause VALUE=pause>', "\n";
+						print HTML '<FONT SIZE=2><FONT COLOR=#6666FF>format:</FONT> DD:HH:MM</FONT><BR>', "\n";
+						print HTML '<INPUT type=text name="time" size=8 maxlength=10> ', "\n";
+						print HTML '<INPUT SRC="', penemo::core->html_image('index', 'pause_submit') ,'" TYPE=IMAGE>', "\n";
+						print HTML '</FORM>', "\n";
 					}
 					elsif (($agent->get_paused()) && ($self->get_pause_web())) {
 						print HTML "<FONT COLOR=#AAAADD SIZE=1><I>untill: ",
 							$agent->get_paused_end(), "</I></FONT><BR>\n";
 						print HTML "<FONT COLOR=#3366FF SIZE=1>";
-						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?unpause=$ip\">";
+						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?unpause=1&agent=$ip\">";
 						print HTML "<FONT COLOR=#4455FF SIZE=1>unpause</FONT></A>]</FONT><BR>\n"; 
 					}
 					elsif ($self->get_pause_web()) {
 						print HTML "<FONT COLOR=#3366FF SIZE=1>";
-						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?pause=$ip\">";
+						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?pause=1&agent=$ip\">";
 						print HTML "<FONT COLOR=#4455FF SIZE=1>pause</FONT></A>]</FONT><BR>\n"; 
 					}
 					print HTML "</FONT>\n";

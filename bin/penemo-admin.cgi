@@ -13,7 +13,7 @@ my $agent_conf_file = '/usr/local/etc/penemo/agent.conf';
 
 my $conf = penemo::config->load_config($penemo_conf_file, $agent_conf_file);
 
-unless ( (param('pause')) || (param('unpause')) ) {
+unless (param('agent')) {
 	die "no agent specified\n";
 }
 
@@ -23,11 +23,11 @@ $date =~ s/\s+/ /g;   # takeout any double spaces
 my ($date_string, $date_delimited) = &convert_date_to_string();
 
 if (param('pause')) {
-	my $agent = param('pause');
+	my $agent = param('agent');
 	&pause($agent);
 }
 elsif (param('unpause')) {
-	my $agent = param('unpause');
+	my $agent = param('agent');
 	&unpause($agent);
 }
 else {
@@ -177,7 +177,7 @@ sub get_time {
 	if ($global) {
 		print "<B>global pause, all agents apply.</B>\n";
 	}
-	print "<INPUT type=text name=\"agent\" value=\"$agent\" size=16 maxsize=999><BR>\n";
+	print "<INPUT type=HIDDEN name=\"agent\" value=\"$agent\" size=16 maxsize=999><BR>\n";
 	print '&nbsp;<BR>', "\n";
 	print 'for how long would you like to pause this agent?<BR>';
 	print '<FONT COLOR=#44AAAA><B>format: DD:HH:MM (day:hr:min):</FONT></B> ';
