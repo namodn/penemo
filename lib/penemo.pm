@@ -170,6 +170,7 @@ sub _penemo_config
 		penemo_bin      => '/usr/local/sbin/penemo',
 		ucd_bin_dir     => '/usr/local/bin',
 		plugin_dir	=> '/usr/local/share/penemo/plugin',
+		log_dir		=> '/usr/local/share/penemo/logs',
 		cgibin_dir	=> '/cgi-bin',
 		errlev_reset	=> '1',
 		tier_support	=> '0',
@@ -229,6 +230,7 @@ sub _penemo_config
 					cache_dir       => $conf{cache_dir},
 					data_dir	=> $conf{data_dir},
 					plugin_dir	=> $conf{plugin_dir},
+					log_dir		=> $conf{log_dir},
 					cgibin_dir	=> $conf{cgibin_dir},
 					penemo_bin      => $conf{penemo_bin},
 					ucd_bin_dir	=> $conf{ucd_bin_dir},
@@ -344,6 +346,7 @@ sub get_html_dir                { $_[0]->{default}{html_dir} }
 sub get_cache_dir               { $_[0]->{default}{cache_dir} }
 sub get_data_dir		{ $_[0]->{default}{data_dir} }
 sub get_plugin_dir		{ $_[0]->{default}{plugin_dir} }
+sub get_log_dir			{ $_[0]->{default}{log_dir} }
 sub get_cgibin_dir		{ $_[0]->{default}{cgibin_dir} }
 sub get_penemo_bin              { $_[0]->{default}{penemo_bin} }
 sub get_ucd_bin_dir             { $_[0]->{default}{ucd_bin_dir} }
@@ -577,6 +580,8 @@ sub organize_notification_info {
 		}
 		
 
+		# do a different heirarchal organization depending on if the
+		# notification method is exec or email.
 		unless ($method eq 'exec') {
 			$self->{notification_org}{$email}{$ip}{ping_check} = 
 					$agent->ping_check(); 
@@ -1483,10 +1488,6 @@ sub write_agent_html
 		system("mkdir $html_dir/agents/$ip"); 
 	}
 
-	unless (-d "$html_dir/agents/$ip/history") {
-		system("mkdir $html_dir/agents/$ip/history");
-	}
-
 	open(HTML, ">$html_dir/agents/$ip/index.html") 
 		or penemo::core->notify_die("Can't open $html_dir/agents/$ip/index.html to write: $!\n"); 
 
@@ -1500,7 +1501,6 @@ sub write_agent_html
 	print HTML "\t<FONT SIZE=5><B>$ip - $name</B></FONT>\n"; 
 	print HTML "<HR WITH=50%>\n"; 
 
-	#print HTML "[<A HREF=\"history/index.html\">history</A>]  ";
 	if ($self->snmp_check()) { 
 		my @mibs = split(/ /, $self->get_snmp_mibs());
 		if (-f "$html_dir/agentdump/$ip") {
@@ -1781,8 +1781,6 @@ sub email {
 	}
 	my $to = $self->get_method();
 		
-	print "  @msg\n";
-
         open(MAIL, "| /usr/sbin/sendmail -t -oi") 
 			or penemo::core->notify_die("Can't send notification email : $!\n"); 
 		print MAIL "To: $to\n"; 
@@ -1796,6 +1794,10 @@ sub email {
 		print MAIL @msg; 
 		print MAIL "\n"; 
 	close MAIL; 
+
+	print "tier level: ", $self->_get_current_tier(), "\n";
+	print "tier email: $to\n";
+	print @msg; 
 
 }
 
