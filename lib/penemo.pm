@@ -771,7 +771,7 @@ sub load_persistent_data {
 	my $ip = $self->get_ip();
 
 	if (-f "$data_dir/$ip")
-	{
+	{ 
 		open (DATA, "$data_dir/$ip") or die "Can't open $data_dir/$ip: $!\n"; 
 			my @lines = <DATA>;
 		close DATA;
@@ -781,7 +781,8 @@ sub load_persistent_data {
 		$self->set_snmp_errlev($data[2]);
 		$self->set_current_tier($data[3]);
 		$self->set_notifications_sent($data[4]);
-	print "$ip: ping_e=$data[0], http_e=$data[1], snmp_e=$data[2], current_tier=$data[3], notifs_sent=$data[4]\n";
+print "\t\terror_levels: ping=$data[0], http=$data[1], snmp=$data[2]\n";
+print "\t\tcurrent_tier: $data[3], notifications_sent: $data[4]\n";
 	}
 
 	if ($self->get_notifications_sent()) {
@@ -1114,10 +1115,8 @@ sub http {
    # begin search part of http function, if search
    # string is true.
 
-   unless ( ($self->get_http_search()) && ($self->get_http_status()) )
-   {
-	if (-f "$cache/search.html")
-	{
+   unless ( ($self->get_http_search()) && ($self->get_http_status()) ) {
+	if (-f "$cache/search.html") {
 		system("rm $cache/search.html");
 	}
 	return;
@@ -1139,7 +1138,10 @@ sub http {
       $return = '0';
       $self->_set_http_search_message("failed search for: $string, at url: $url\n");
    }
-   system("rm $cache/search.html");
+
+   if (-f "$cache/search.html") {
+      system("rm $cache/search.html");
+   }
 
    $self->_set_http_search_status($return);
    $self->_set_http_status($return);
@@ -1178,7 +1180,9 @@ sub agent_html_write
 	} 
 	else { 
 		my @mibs = split(/ /, $self->get_snmp_mibs());
-		system("rm $html_dir/agentdump/$ip");
+		if (-f "$html_dir/agentdump/$ip") {
+			system("rm $html_dir/agentdump/$ip");
+		}
 		foreach my $mib (@mibs) {
 			if (-f "$html_dir/agentdump/$ip") {
 			}

@@ -65,8 +65,10 @@ foreach my $agent (@agents) {
 	my $ip = $agent->get_ip();
 
 	# load persistent data ( error levels etc. ) into $agent object
-	print "  $ip: loading agent data.\n";
+	print "- $ip: loading agent data.\n";
 	$agent->load_persistent_data($conf->get_data_dir());
+
+	print "\t\tnotify_level: ", $agent->get_notify_level(), ", errlev_reset: ", $agent->get_errlev_reset(), "\n";
 
 	# perform check functions
 	&ping_check($agent);
@@ -161,13 +163,10 @@ sub ping_check {
 	if ($agent->ping_check()) {
 		print "  $ip: ping status  : "; 
 		$agent->ping();
-		print $agent->get_ping_status(), "\n";
+		print $agent->get_ping_status();
 
 		unless ($agent->get_ping_status()) { 
-
-print "error ping_lev: ", $agent->get_ping_errlev(), 
-      " notify: ", $agent->get_notify_level(), 
-      " reset: ", $agent->get_errlev_reset(), "\n";
+ 			print "\terrlev: ", $agent->get_ping_errlev(), "\n";
 
 			if ($agent->get_ping_errlev() >= $agent->get_notify_level()) { 
 				$agent->set_error_detected(); 
@@ -177,6 +176,7 @@ print "error ping_lev: ", $agent->get_ping_errlev(),
 			}
 		}
 		else { 
+			print "\n";
 			if ($agent->get_ping_errlev()) {
 				$agent->set_error_resolved('1');
 			}
@@ -195,13 +195,13 @@ sub http_check {
 	if ($agent->http_check()) {
 		print "  $ip: http status  : "; 
 		$agent->http( $conf->get_http_command(), $conf->get_cache_dir() );
-		print $agent->get_http_status(), "\n";
+		print $agent->get_http_status(), "  errlev: ", $agent->get_http_errlev(), "\n";
 
 		unless ($agent->get_http_status()) { 
 
-print "error http_lev: ", $agent->get_http_errlev(), 
-      " notify: ", $agent->get_notify_level(), 
-      " reset: ", $agent->get_errlev_reset(), "\n";
+#print "error http_lev: ", $agent->get_http_errlev(), 
+#      " notify: ", $agent->get_notify_level(), 
+#      " reset: ", $agent->get_errlev_reset(), "\n";
 
 			if ($agent->get_http_errlev() >= $agent->get_notify_level()) { 
 				$agent->set_error_detected(); 
@@ -239,12 +239,14 @@ sub snmp_check {
 				$snmp_errlev = '0';
 			}
 		}
-		print "\n";
+		print "  errlev: ", $agent->get_snmp_errlev(), "\n";
 
 		unless ($snmp_errlev) {
-print "error snmp_lev: ", $agent->get_snmp_errlev(), 
-      " notify: ", $agent->get_notify_level(), 
-      " reset: ", $agent->get_errlev_reset(), "\n";
+
+#print "error snmp_lev: ", $agent->get_snmp_errlev(), 
+#      " notify: ", $agent->get_notify_level(), 
+#      " reset: ", $agent->get_errlev_reset(), "\n";
+
 			if ($agent->get_snmp_errlev() >= $agent->get_notify_level()) 
 			{ 
 				$agent->set_error_detected(); 
