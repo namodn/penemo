@@ -1,0 +1,27 @@
+#plugins.txt documentation to aid in the creation of plugins for penemo.
+
+
+      penemo uses .pm file for it's plugins. The files by default are located
+   in /usr/local/share/penemo/lib/penemo/agent/  (currently filecheck.pm is
+   the only plugin included with penemo, however there are several people
+   I know of working on plugins, and they will probably be included in the
+   next release, if you have developed a plugin for penemo, email me:
+   nick@namodn.com).
+
+      The plugins should follow a standard design. If you know any OO Perl
+   or maybe OO theory, things will be esier, but even if you don't you can
+   do it. Just study the filecheck.pm and mimick it's methods. They must have 
+   the following methods in them: 
+   
+         new (for creating the object for penemo to use). It will pass the 
+	     following values in a hash table: 
+	     
+	         ip   : (ip address of the agent)
+	         mod  : (name of the plugin, just
+		        for clarity (and debuging))
+	         conf : (an array of key=pair values). Do a 
+                         my %conf = split(/=/, $self->{conf}); 
+		         to get the values into a local hash.
+
+
+

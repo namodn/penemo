@@ -16,7 +16,7 @@ INTRODUCTION
  penemo requires UCD-SNMP to be installed on systems that you wish to be snmp 
  polled, as well as the machine this program will run on (it needs access 
  to the snmpwalk command). However, None of the UCD-SNMP stuff is required 
- if all you wish to do is ping hosts and perform http requests.
+ if all you wish to do is ping hosts, perform http requests, and use plugins.
 
 
 

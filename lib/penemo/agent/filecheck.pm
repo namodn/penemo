@@ -49,7 +49,6 @@ sub new {
 		message	    => '',
 		status	    => '',
 		html	    => '',
-		dir_plugin  => $args{dir_plugin},
 		conf        => $args{conf},
 #		agent_ref   => $args{agent_ref},
 	};
@@ -91,25 +90,29 @@ sub html { $_[0]->{html}; }
 
 sub exec {
 	my $self = shift;
-	#my $dir_plugin = $self->_get_dir_plugin() . "/check";
 	#my $mod = $self->_get_mod();
 	my $test = $self->_get_conf('filecheck_test');
+	my $file = $self->_get_conf('filecheck_file');
 	if ($test) {
 		print "CONFTEST: $test\n";
 	}
+	if ($file) {
+		print "CONFFILE: $file\n";
+	}
+
 	my $ip = $self->_get_ip();
 	my @output = ();
 	my $ok_light = penemo::core->html_image('agent', 'ok');
 	my $bad_light = penemo::core->html_image('agent', 'bad');
 	
-	if (-f "/tmp/penemo.test") { 
+	if (-f "$file") { 
 		$self->{status} = "1"; 
-		$self->{html} = "$ok_light <FONT COLOR=\"#11AA11\">the file: /tmp/penemo.test exists.</FONT><BR>\n"; 
+		$self->{html} = "$ok_light <FONT COLOR=\"#11AA11\">the file: $file exists.</FONT><BR>\n"; 
 	} 
 	else { 
 		$self->{status} = "0"; 
-		$self->{message} = "filecheck: the file /tmp/penemo.test does not exists.\n"; 
-		$self->{html} = "$bad_light <FONT COLOR=\"#AAAAAA\">filecheck: the file: /tmp/penemo.test does not exists.</FONT><BR>\n"; 
+		$self->{message} = "filecheck: the file $file does not exists.\n"; 
+		$self->{html} = "$bad_light <FONT COLOR=\"#AAAAAA\">filecheck: the file: $file does not exists.</FONT><BR>\n"; 
 	}      
 
 	return;

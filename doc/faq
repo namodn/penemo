@@ -13,7 +13,8 @@
        1.2 How do I specify which values to report in the penemo SNMP checks?
 
    2. Pausing
-       2.1 When I click pause on the web interface, I get an internal server error.
+       2.1 When I click pause on the web interface, I get an internal server 
+           error.
        2.2 After I click pause, and enter the time limit, when I click submit, 
            I get an internal server error.
 
@@ -54,7 +55,8 @@
              proc cron
              proc httpd
  
-             disk    /       15%    # percentage is min. free space before errflag
+             disk    /       15%    # percentage is min. free space before 
+	     			    # errflag
              disk    /usr    20%    # is set for the specified partition.
              disk    /var    20%
              disk    /home       15%
@@ -66,7 +68,8 @@
            monitor) to get all of it's snmp data for a specific mib (ucd, mib-2)
            etc. The agents snmpd returns data based on this config file (i.e.
            it returns a list of monitored daemons with an errorflag set on
-           any that may not be running. Likewise with disk capacity specifications.
+           any that may not be running. Likewise with disk capacity 
+	   specifications.
 
 
 
@@ -87,10 +90,12 @@
        I get an internal server error.
 
        a). This usually means the cgi does not have permision to write to
-           the penemo data directory (where it keeps persistent agent information,
-           like error levels, pausing info etc. 
+           the penemo data directory (where it keeps persistent agent 
+	   information, like error levels, pausing info etc. 
       
-           The data directory (by default located in /usr/local/share/penemo/data)
+           The data directory (by default located in 
+	   /usr/local/share/penemo/data)
+	   
            must be rwx either with the webservers user or group. 
 
            It is not reccomended to set o=rwx on the data directory, that would

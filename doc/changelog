@@ -1,7 +1,21 @@
 penemo changelog
 
 
-changes from version 1.0 BETA2 ->
+changes from version 1.0 BETA3 -> 1.0 (stable)
+	* revamped the plugin architecure, uses .pm files now. 
+	* you can now pass config options to the plugins through the
+	  agent.conf (view the plugins.txt for more details).
+	* fixed notify_exec now, should work. Use it as you would notify_email.
+	# added pause functionality configuration, you can now move the pause
+	  function to the main page (less clicks).
+	* you can now pause as long as you like from the web interface 
+	  (a good security tip is to make .htaccess authentication for
+	  cgi execution, so anyone who clicks pause will have to have a
+	  login).
+	* several bugfixes too numerous to list.
+	
+
+changes from version 1.0 BETA2 -> 1.0 BETA3
 	* changed the html output a little, changed some font's and cleaned up 
 	   some layout.
 	* fixed a time problem with the penemo-admin.cgi (problem splitting 

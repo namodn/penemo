@@ -640,7 +640,7 @@ sub plugin {
 						mod => $mod,
 						ip => $ip,
 						conf => $conflist,
-						dir_plugin => $dir_plugin,
+			#			dir_plugin => $dir_plugin,
 		);
 
 		$plugin->exec();
