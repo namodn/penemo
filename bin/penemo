@@ -195,13 +195,10 @@ sub http_check {
 	if ($agent->http_check()) {
 		print "  $ip: http status  : "; 
 		$agent->http( $conf->get_http_command(), $conf->get_cache_dir() );
-		print $agent->get_http_status(), "  errlev: ", $agent->get_http_errlev(), "\n";
+		print $agent->get_http_status();
 
 		unless ($agent->get_http_status()) { 
-
-#print "error http_lev: ", $agent->get_http_errlev(), 
-#      " notify: ", $agent->get_notify_level(), 
-#      " reset: ", $agent->get_errlev_reset(), "\n";
+ 			print "  errlev: ", $agent->get_http_errlev(), "\n";
 
 			if ($agent->get_http_errlev() >= $agent->get_notify_level()) { 
 				$agent->set_error_detected(); 
@@ -211,6 +208,7 @@ sub http_check {
 			}
 		}
 		else { 
+			print "\n";
 			if ($agent->get_http_errlev()) {
 				$agent->set_error_resolved('1');
 			}
@@ -239,13 +237,9 @@ sub snmp_check {
 				$snmp_errlev = '0';
 			}
 		}
-		print "  errlev: ", $agent->get_snmp_errlev(), "\n";
 
 		unless ($snmp_errlev) {
-
-#print "error snmp_lev: ", $agent->get_snmp_errlev(), 
-#      " notify: ", $agent->get_notify_level(), 
-#      " reset: ", $agent->get_errlev_reset(), "\n";
+			print "  errlev: ", $agent->get_snmp_errlev(), "\n";
 
 			if ($agent->get_snmp_errlev() >= $agent->get_notify_level()) 
 			{ 
@@ -256,6 +250,7 @@ sub snmp_check {
 			}
 		}
 		else { 
+			print "\n";
 			if ($agent->get_snmp_errlev()) {
 				$agent->set_error_resolved('1');
 			}
