@@ -128,7 +128,7 @@ sub get_conf_dirs {
 			$cgibin_dir = $value;
 		}
 	}
-	return ($html_dir, $html_dir, $cgibin_dir);
+	return ($data_dir, $html_dir, $cgibin_dir);
 }
 
 # prints html for to get time to pause agent for.
