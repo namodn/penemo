@@ -1546,8 +1546,8 @@ sub write_agent_html
 	print CONF "<HR WIDTH=50%>\n"; 
 	print CONF "</CENTER>\n"; 
 	print CONF "&nbsp;<BR>\n";
-	print CONF "<B>group</B>: ", $self->get_group(), "<BR>\n";;
-	print CONF "<B>checks</B>:<I>";
+	print CONF "<B>group</B>: <FONT COLOR=#6666AA>", $self->get_group(), "</FONT><BR>\n";;
+	print CONF "<B>checks</B>:<I><FONT COLOR=#6666AA>";
 	if ($self->ping_check()) { print CONF " ping"; }
 	if ($self->http_check()) { print CONF ", http"; }
 	if ($self->snmp_check()) { 
@@ -1558,7 +1558,27 @@ sub write_agent_html
 		print CONF ", plugin "; 
 		print CONF $self->get_plugin_mods();
 	}
-	print CONF "</I><BR>\n";
+	print CONF "</FONT></I><BR>\n";
+
+	print CONF "<B>error levels</B>: ";
+	print CONF "ping: <FONT COLOR=#6666AA>", $self->get_ping_errlev(), "</FONT>, ";
+	print CONF "http: <FONT COLOR=#6666AA>", $self->get_http_errlev(), "</FONT>, ";
+	print CONF "snmp: <FONT COLOR=#6666AA>", $self->get_snmp_errlev(), "</FONT>, ";
+	print CONF "plugin: <FONT COLOR=#6666AA>", $self->get_plugin_errlev(), "</FONT> ";
+	print CONF "<BR>&nbsp;<BR>\n";
+
+	#print CONF "tier support: <FONT COLOR=#6666AA>", # not agent value yet.
+
+	print CONF "<B>current tier</B>: <FONT COLOR=#6666AA>", $self->get_current_tier(), "</FONT>, ";
+	print CONF "<BR>\n";
+	print CONF "<B>notifications sent</B>: <FONT COLOR=#6666AA>", $self->get_notifications_sent(), "</FONT>, ";
+	print CONF "<BR>\n";
+	print CONF "<B>notify_level</B>: <FONT COLOR=#6666AA>", $self->get_notify_level(), "</FONT>, ";
+	print CONF "<BR>\n";
+	print CONF "<B>notify_cap</B>: <FONT COLOR=#6666AA>", $self->get_notify_cap(), "</FONT>, ";
+	print CONF "<BR>&nbsp;<BR>\n";
+	print CONF "<B>errlev_reset</B>: <FONT COLOR=#AA4444>", $self->get_errlev_reset(), "</FONT>, ";
+	print CONF "<BR>\n";
 
 	print CONF "</BODY></HTML>\n";
 	close CONF;
