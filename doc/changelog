@@ -7,6 +7,8 @@ changes from version 1.0 BETA2 ->
 	* fixed a time problem with the penemo-admin.cgi (problem splitting 
 	   date string).
 	* modified the notification messages to be less "wordy".
+	* made all the little LED's have transparent backgrounds (in case
+	   someone wants to go and change the background to blaring white :)
 
 
 changes from version 1.0 BETA1 -> 1.0 BETA2
@@ -25,6 +27,7 @@ changes from version 0.7 -> 1.0 BETA1
            everyone know the problem is resolved.  
         * check funtion for plugins.  
         * extensive pausing features 
+	* images instead of colored '*' for warning LED's (thanks to Mike Tuller)
 
 
 changes from version 0.6 -> 0.7
