@@ -543,7 +543,7 @@ sub organize_notification_info {
 		my $exec = '';
 
 
-		unless ($self->get_tier_support()) {
+		unless ($agent->get_tier_support()) {
 			$method = $agent->get_notify_method_1();
 			if ($method eq 'email') {
 				$email = $agent->get_notify_email_1();
@@ -553,7 +553,7 @@ sub organize_notification_info {
 			}
 		}
 		else {
-			if ($agent->get_notifications_sent() >= $self->get_tier_promote()) {
+			if ($agent->get_notifications_sent() >= $agent->get_tier_promote()) {
 				unless ($agent->get_current_tier() == '3') {
 					$agent->set_current_tier('+') unless ($agent->get_error_resolved());
 					$agent->set_notifications_sent('0');
@@ -797,7 +797,7 @@ sub index_html_write {
 		print HTML "<BODY BGCOLOR=\"#000000\" TEXT=\"#338877\" "; 
 		print HTML "LINK=\"#AAAAAA\" VLINK=\"#AAAAAA\">\n"; 
 		print HTML "<CENTER>\n"; 
-		print HTML "\t<FONT SIZE=5><B><FONT COLOR=\"#CC11AA\">penemo</FONT> "; 
+		print HTML "\t<FONT SIZE=3><B><FONT COLOR=\"#CC11AA\">penemo</FONT> "; 
 		print HTML "version $version</B></FONT>\n"; 
 		print HTML "<HR WIDTH=60%>\n"; 
 		print HTML "penemo last run: <FONT COLOR=\"#AAAAAA\">$date</FONT><BR>\n"; 
@@ -1950,12 +1950,11 @@ sub email {
         open(MAIL, "| /usr/sbin/sendmail -t -oi") 
 			or penemo::core->notify_die("Can't send notification email : $!\n"); 
 		print MAIL "To: $to\n"; 
-		print MAIL "From: penemo-notify\n";
-		print MAIL "Subject: $instance Problem!\n"; 
+		print MAIL "From: penemo_notify\n";
+		print MAIL "Subject: $instance\n"; 
 		print MAIL "tier level: ", $self->_get_current_tier(), "\n";
 		print MAIL "tier email: $to\n";
-		print MAIL "  The following errors were encountered\n"; 
-		print MAIL "during the execution of penemo $version.\n"; 
+		print MAIL "  messages during execution, penemo $version\n"; 
 		print MAIL "\n"; 
 		print MAIL @msg; 
 		print MAIL "\n"; 

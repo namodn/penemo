@@ -51,7 +51,7 @@ sub new {
 		message	    => '',
 		status	    => '',
 		html	    => '',
-		plugin_dir  => $args{plugin_dir},
+		dir_plugin  => $args{dir_plugin},
 	};
 
 	bless $ref, $class;
@@ -60,35 +60,39 @@ sub new {
 
 # functions to retrieve values for internal methods.
 #
-sub _get_plugin_dir { $_[0]->{plugin_dir} }
+sub _get_dir_plugin { $_[0]->{dir_plugin} }
 sub _get_mod { $_[0]->{mod} }
 sub _get_ip { $_[0]->{ip} }
 
 
 sub exec {
 	my $self = shift;
-	my $plugin_dir = $self->_get_plugin_dir() . "/check";
+	my $dir_plugin = $self->_get_dir_plugin() . "/check";
 	my $mod = $self->_get_mod();
 	my $ip = $self->_get_ip();
 	my @output = ();
 	
 
 	# die if file doesnt exist
-	unless (-f "$plugin_dir/$mod" . '.mod') {
-		penemo::core->notify_die("plugin: $plugin_dir/$mod.mod does not exist.\n");
+	unless (-f "$dir_plugin/$mod" . '.mod') {
+		$self->{status} = 0;
+		$self->{message} = "plugin: $dir_plugin/$mod.mod does not exist.\n";
+		return;
 	}
 
 	# doesnt return proper results
-	if (`$plugin_dir/$mod.mod check`) {
-		penemo::core->notify_die("$plugin_dir/$mod.mod is not a valid penemo check module plugin.\n");
+	if (`$dir_plugin/$mod.mod check`) {
+		$self->{status} = 0;
+		$self->{message} = "$dir_plugin/$mod.mod is not a valid penemo check module plugin.\n";
+		return;
 	}
 
 	# execute check plugin module
-	@output = `$plugin_dir/$mod.mod exec`;
+	@output = `$dir_plugin/$mod.mod exec`;
 
 	unless (@output) {
 		$self->{status} = 0;
-		$self->{message} = "execution of $plugin_dir/$mod.mod failed (nothing returned).\n";
+		$self->{message} = "execution of $dir_plugin/$mod.mod failed (nothing returned).\n";
 		return;
  	}
 

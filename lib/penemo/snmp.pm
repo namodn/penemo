@@ -52,8 +52,8 @@ sub new {
 		message	    => '',
 		status	    => '',
 		html	    => '',
-		plugin_dir  => $args{plugin_dir},
-		ucd_bin_dir => $args{ucd_bin_dir},
+		dir_plugin  => $args{dir_plugin},
+		dir_ucd_bin => $args{dir_ucd_bin},
 	};
 
 	bless $ref, $class;
@@ -62,37 +62,41 @@ sub new {
 
 # functions to retrieve values for internal methods.
 #
-sub _get_plugin_dir { $_[0]->{plugin_dir} }
+sub _get_dir_plugin { $_[0]->{dir_plugin} }
 sub _get_mib { $_[0]->{mib} }
-sub _get_ucd_bin_dir { $_[0]->{ucd_bin_dir} }
+sub _get_dir_ucd_bin { $_[0]->{dir_ucd_bin} }
 sub _get_community { $_[0]->{community} }
 sub _get_ip { $_[0]->{ip} }
 
 
 sub poll {
 	my $self = shift;
-	my $plugin_dir = $self->_get_plugin_dir() . "/snmp";
+	my $dir_plugin = $self->_get_dir_plugin() . "/snmp";
 	my $mib = $self->_get_mib();
 	my $ip = $self->_get_ip();
 	my $community = $self->_get_community();
-	my $ucd_bin_dir = $self->_get_ucd_bin_dir();
-	my $snmpwalk = "$ucd_bin_dir/snmpwalk";
+	my $dir_ucd_bin = $self->_get_dir_ucd_bin();
+	my $snmpwalk = "$dir_ucd_bin/snmpwalk";
 	my @output = ();
 	
 
-	unless (-f "$plugin_dir/$mib" . '.mib') {
-		penemo::core->notify_die("plugin: $plugin_dir/$mib.mib does not exist.\n");
+	unless (-f "$dir_plugin/$mib" . '.mib') {
+		$self->{status} = 0;
+		$self->{message} = "plugin: $dir_plugin/$mib.mib does not exist.\n";
+		return;
 	}
 
-	if (`$plugin_dir/$mib.mib check`) {
-		penemo::core->notify_die("$plugin_dir/$mib.mib is not a valid penemo mib plugin.\n");
+	if (`$dir_plugin/$mib.mib check`) {
+		$self->{status} = 0;
+		$self->{message} = "$dir_plugin/$mib.mib is not a valid penemo mib plugin. (failed check)\n";
+		return;
 	}
 
-	@output = `$plugin_dir/$mib.mib $ip $community $snmpwalk`;
+	@output = `$dir_plugin/$mib.mib $ip $community $snmpwalk`;
 
 	unless (@output) {
 		$self->{status} = 0;
-		$self->{message} = "execution of $plugin_dir/$mib.mib failed (nothing returned).\n";
+		$self->{message} = "execution of $dir_plugin/$mib.mib failed (nothing returned).\n";
 		return;
  	}
 
