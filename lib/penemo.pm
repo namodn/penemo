@@ -113,7 +113,7 @@ sub notify_die {
 	close MAIL; 
 
 	print "** dying...\n";
-	die;
+	exit 1;
 }
 
 
@@ -130,8 +130,7 @@ use strict;
 use penemo;
 use penemo::agent;
 
-sub load_config
-{
+sub load_config {
 	my ($class, $penemo_conf, $agent_conf) = @_;
 
 	my ($global_conf_ref, $agent_defaults_ref) = &_default_config($penemo_conf);
@@ -147,8 +146,7 @@ sub load_config
 	bless $ref, $class;
 }
 
-sub _default_config
-{
+sub _default_config {
 	my ($conf_file) = @_;
 	my $key = '';
 	my $value = '';
@@ -366,6 +364,39 @@ sub _agent_params_plugin {
                 my $value = shift @tmp;
                 $conf_ref->{$agent}{$func}{$param} = $value;
         }
+}
+
+
+# this method is to check the config files and make sure there
+# is data in them and does any parse/data checking to make the
+# data is valid.
+#
+sub check_config {
+	my $self = shift;
+	$self->_check_penemo_conf();
+	$self->_check_agent_conf(); 
+}
+
+# this method is pretty useless right now. as there are _always_
+# going to be default values for the penemo.conf (assigned internally).
+# however, this could be expanded in the future for syntax checking.
+#
+sub _check_penemo_conf {
+	my $self = shift;
+	my $pconf_keys = (keys %{$self->{default}});
+	if (! $pconf_keys ) {
+		penemo::core->notify_die("Nothing defined in penemo.conf\n");
+	}
+}
+
+# this checks the agent.conf for anything. If there is something, it
+# does some parse checking.
+sub _check_agent_conf {
+	if (! $_[0]->{agent_list} ) {
+		penemo::core->notify_die("Nothing defined in agent.conf\n");
+	}
+
+	# do parse checking
 }
 
 # methods for load_config object. (global conf settings).

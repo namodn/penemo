@@ -52,7 +52,7 @@ print "penemo begin: $date";
 # create conf object
 print "loading configuration files.\n";
 my $conf = penemo::config->load_config($penemo_conf_file, $agent_conf_file);
-
+$conf->check_config();
 
 print "begining agent checks.\n";
 print "  1 = good.   0 = bad.\n";
