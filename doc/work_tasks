@@ -8,8 +8,9 @@
       tier1 emails="emails,emails" increment=(3 bad checks)
       tier2 emails="emails,emails" increment=(3 bad checks)
       tier3 emails="emails" increment=(2 bad checks)
-      - impliment, "resolved" notification. send page to whatever tier it was on, to
-        let everyone know the problem is resolved. config option.
+      - impliment, "resolved" notification. send page to whatever 
+        tier it was on, to let everyone know the problem is 
+        resolved. config option.
 
 [*] html output for agents and the index of agents.
 
