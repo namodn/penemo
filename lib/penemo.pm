@@ -47,7 +47,7 @@ sub file_write
 	return unless (@data); 
 
 	open(DATA, "$file") 
-		or die "Can't open $file : $!\n"; 
+		or penemo::core->notify_die("Can't open $file : $!\n"); 
 	foreach my $line (@data) 
 	{ 
 		print DATA $line; 
@@ -81,6 +81,35 @@ sub html_image {
 	else {
 		return ("* "); 
 	} 
+}
+
+# sends a notification message and dies. requires no class. 
+# only param is error msg string. only supports email because 
+# it should only be used when there is an internal
+# penemo error. an unrecoverable problem, not a agent check failure. 
+# sends email to root@localhost
+#
+sub notify_die {
+	my ($class, $msg) = @_;
+
+	print "\n\n** penemo had an internal error:\n";
+	print "**   $msg\n";
+	print "** sending emergency notification to root\@localhost\n";
+
+	open(MAIL, "| /usr/sbin/sendmail -t -oi") 
+			or die "Can't send death notification email : $!\n"; 
+		print MAIL "To: root\@localhost\n"; 
+		print MAIL "From: penemo-notify\n";
+		print MAIL "Subject: penemo died!\n"; 
+		print MAIL "  The following error was encountered\n"; 
+		print MAIL "The error had fatal results, please fix asap.\n";
+		print MAIL "\n"; 
+		print MAIL $msg; 
+		print MAIL "\n"; 
+	close MAIL; 
+
+	print "** dying...\n";
+	die;
 }
 
 
@@ -143,10 +172,11 @@ sub _penemo_config
 		errlev_reset	=> '1',
 		tier_support	=> '0',
 		tier_promote	=> '5',
+		emergency_contact => 'root@localhost',
    );
 
    open(CFG, "$conf_file")
-         or die "Can't open $conf_file : $!\n";
+         or penemo::core->notify_die("Can't open $conf_file : $!\n");
 
    while (<CFG>)
    {
@@ -205,6 +235,7 @@ sub _penemo_config
 					notification_org	=> [],
 					tier_support	=> $conf{tier_support},
 					tier_promote	=> $conf{tier_promote},
+					emergency_contact => $conf{emergency_contact},
 				},
    );
    
@@ -219,7 +250,7 @@ sub _agent_config {
        	my $begin = 0;
    
         open(CFG, "$conf_file")
-                or die("Can't open $conf_file : $!\n");
+                or penemo::core->notify_die("Can't open $conf_file : $!\n");
 	my @lines = <CFG>;
         close CFG;
    
@@ -246,7 +277,7 @@ sub _agent_config {
 				$conf{$ip} = { %agent_defaults };
                         }
                         else {
-                                die("penemo: syntax error in agent.conf line $line_num\n");
+                                penemo::core->notify_die("penemo: syntax error in agent.conf line $line_num\n");
                         }
 			next;
                 }
@@ -316,6 +347,7 @@ sub get_http_command            { $_[0]->{default}{http_command} }
 sub get_instance_name		{ $_[0]->{default}{instance_name} }
 sub get_tier_support		{ $_[0]->{default}{tier_support} }
 sub get_tier_promote		{ $_[0]->{default}{tier_promote} }
+sub get_emergency_contact	{ $_[0]->{default}{emergency_contact} }
 
 sub _next_ip {
 	my @ip_list = split (/ /, $_[0]->{agent_list});
@@ -674,7 +706,7 @@ sub index_html_write {
 	
 
 
-	open(HTML, ">$index") or die "Can't write to $index : $!\n"; 
+	open(HTML, ">$index") or penemo::core->notify_die("Can't write to $index : $!\n"); 
 		print HTML "<HTML>\n"; 
 		print HTML "<HEAD>\n"; 
 		print HTML "<META HTTP-EQUIV=\"refresh\" CONTENT=\"120\; URL=index.html\">\n";
@@ -837,7 +869,7 @@ sub load_persistent_data {
 
 	if (-f "$data_dir/$ip")
 	{ 
-		open (DATA, "$data_dir/$ip") or die "Can't open $data_dir/$ip: $!\n"; 
+		open (DATA, "$data_dir/$ip") or penemo::core->notify_die("Can't open $data_dir/$ip: $!\n"); 
 			my @lines = <DATA>;
 		close DATA;
 		my (@data) = split(/\s+/, $lines[0]); 
@@ -870,7 +902,7 @@ sub write_persistent_data {
 	my $current_tier = $self->get_current_tier();
 	my $notifications_sent = $self->get_notifications_sent();
 	
-	open (DATA, ">$data_dir/$ip") or die "Can't open $data_dir/$ip: $!\n";
+	open (DATA, ">$data_dir/$ip") or penemo::core->notify_die("Can't open $data_dir/$ip: $!\n");
 		print DATA "$ping_errlev\t$http_errlev\t$snmp_errlev\t$plugin_errlev\t$current_tier\t$notifications_sent\n";
 	close DATA;
 }
@@ -1213,7 +1245,7 @@ sub http {
    my $string = $self->get_http_search();
 
    open(SEARCH, "$cache/search.html")
-        or die "Couldnt open $cache/search.html : $!\n";
+        or penemo::core->notify_die("Couldnt open $cache/search.html : $!\n");
    my $return = '0';
    while (<SEARCH>) {
       if ($_ =~ /$string/) {
@@ -1318,7 +1350,7 @@ sub agent_html_write
 	}
 
 	open(HTML, ">$html_dir/agents/$ip/index.html") 
-		or die "Can't open $html_dir/agents/$ip/index.html to write: $!\n"; 
+		or penemo::core->notify_die("Can't open $html_dir/agents/$ip/index.html to write: $!\n"); 
 
 	print HTML "<HTML>\n"; 
 	print HTML "<HEAD>\n"; 
@@ -1640,7 +1672,7 @@ sub email {
 	print "  @msg\n";
 
         open(MAIL, "| /usr/sbin/sendmail -t -oi") 
-			or die "Can't send notification email : $!\n"; 
+			or penemo::core->notify_die("Can't send notification email : $!\n"); 
 		print MAIL "To: $to\n"; 
 		print MAIL "From: penemo-notify\n";
 		print MAIL "Subject: $instance Problem!\n"; 

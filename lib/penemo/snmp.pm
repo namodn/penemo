@@ -81,11 +81,11 @@ sub poll {
 	
 
 	unless (-f "$plugin_dir/$mib" . '.mib') {
-		die "plugin: $plugin_dir/$mib.mib does not exist.\n";
+		penemo::core->notify_die("plugin: $plugin_dir/$mib.mib does not exist.\n");
 	}
 
 	if (`$plugin_dir/$mib.mib check`) {
-		die "$plugin_dir/$mib.mib is not a valid penemo mib plugin.\n";
+		penemo::core->notify_die("$plugin_dir/$mib.mib is not a valid penemo mib plugin.\n");
 	}
 
 	@output = `$plugin_dir/$mib.mib $ip $community $snmpwalk`;
@@ -124,7 +124,7 @@ sub poll {
 	}
 
 	unless ((@agentdump) && (@htmldump)) {
-		die "internal error in snmp.pm\n";
+		penemo::core->notify_die("internal error in snmp.pm\n");
 	}
 
 	$self->{status} = 1;
