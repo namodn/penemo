@@ -1,24 +1,29 @@
-* make http its own obj, or something, impliment multi-http checks.
+# current tasks to get to
+#
+# [!]: need to do  [-]: working on it  [x]: complete
+#
 
-@[done?] tier levels for notification
-	tier1 emails="emails,emails" increment=(3 bad checks)
-	tier2 emails="emails,emails" increment=(3 bad checks)
-	tier3 emails="emails" increment=(2 bad checks)
-  - impliment, "resolved" notification. send page to whatever tier it was on, to
-    let everyone know the problem is resolved. config option.
 
-@[done?] work on web output etc. (almost done)
+[x] tier levels for notification
+      tier1 emails="emails,emails" increment=(3 bad checks)
+      tier2 emails="emails,emails" increment=(3 bad checks)
+      tier3 emails="emails" increment=(2 bad checks)
+      - impliment, "resolved" notification. send page to whatever tier it was on, to
+        let everyone know the problem is resolved. config option.
 
-* web-based admin functionality
-  - extensive pausing features
+[*] html output for agents and the index of agents.
 
-* replace all dies and errors with notify functionality.
+[-] extensive pausing features
 
-* make it so notifications reset <type>_errlev, so that there arent
-  overlapping counts from different checks in same agent, resulting
-  in more notifications than set in notify_level
+[-] replace all dies and errors with notify functionality.
 
-* a another check funtion for plugins.
+[!] make it so notifications reset <type>_errlev, so that there arent
+      overlapping counts from different checks in same agent, resulting
+      in more notifications than set in notify_level
 
-* make a history page for each agent.
+[!] add another check funtion for plugins.
+
+[!] make a history page for each agent.
+
+[!] make http its own obj, or something, impliment multi-http checks.
 
