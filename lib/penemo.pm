@@ -125,7 +125,7 @@ sub notify_die {
 
 package penemo::config;
 
-use lib '/usr/local/share/penemo/modules';
+use lib '/usr/local/share/penemo/lib';
 use strict;
 use penemo;
 use penemo::agent;
@@ -219,7 +219,9 @@ sub _default_config
 		notify_exec_3   => $conf{notify_exec},
 		snmp_community  => $conf{snmp_community},
 		ping_timeout    => $conf{ping_timeout},
+		ping_ip		=> '',
 		id_name		=> 'undefined',
+		id_ip		=> 'undefined',
 		id_group	=> 'undefined',
 		notify_errlev_reset	=> $conf{notify_errlev_reset},
 		notification_stack	=> '',
@@ -252,7 +254,7 @@ sub _agent_config {
         my ($conf_file, %agent_defaults) = @_;
         my %conf = ();
         my $line_num = 0;
-       	my $ip = '';
+       	my $agent = '';
        	my $begin = 0;
    
         open(CFG, "$conf_file")
@@ -265,21 +267,21 @@ sub _agent_config {
                 next if ($line =~ /^\s*$/);
                 next unless ($line =~ /^\w*/);
 
-		unless ($ip) {
+		unless ($agent) {
 			next if ($begin); 
 			my $else = '';
-			($ip, $else) = split(/ /, $line); 
-			unless ($ip)	{ $ip = $line; }
+			($agent, $else) = split(/ /, $line); 
+			unless ($agent)	{ $agent = $line; }
 			next unless ($else); 
 			$line = $else;
                 }
 
                 if ($line =~ /^{/) {
-                        if ($ip) {
+                        if ($agent) {
                                 $begin = '1';
                                 $conf{agent_list} ||= '';
-                                $conf{agent_list} .= "$ip ";
-				$conf{$ip} = { %agent_defaults };
+                                $conf{agent_list} .= "$agent ";
+				$conf{$agent} = { %agent_defaults };
                         }
                         else {
                                 penemo::core->notify_die("penemo: syntax error in agent.conf line $line_num\n");
@@ -288,46 +290,45 @@ sub _agent_config {
                 }
 
                 if ($line =~ /^}\s*/) {
-			undef $ip;
+			undef $agent;
                         $begin = 0;
 			next;
                 }
 
-		if ($line =~ /^\s*PING\s*/i) {
-			$conf{$ip}{ping_check} = "1";
-			&_agent_params(\%conf, $ip, 'ping', $line);
-		}
-		elsif ($line =~ /^\s*HTTP\s{1}/i) {
-			&_agent_params(\%conf, $ip, 'http', $line);
-			if ($conf{$ip}{http_url}) {
-				$conf{$ip}{http_check} = '1';
-			}
-		}
-		elsif ($line =~ /^\s*SNMP\s{1}/i) {
-			&_agent_params(\%conf, $ip, 'snmp', $line);
-			if ($conf{$ip}{snmp_mibs}) {
-				$conf{$ip}{snmp_check} = '1';
-			}
-		}
-		elsif ($line =~ /^\s*ID\s{1}/i) {
-			&_agent_params(\%conf, $ip, 'id', $line);
+		if ($line =~ /^\s*ID\s{1}/i) {
+			&_agent_params(\%conf, $agent, 'id', $line);
 		}
 		elsif ($line =~ /^\s*NOTIFY\s{1}/i) {
-			&_agent_params(\%conf, $ip, 'notify', $line);
+			&_agent_params(\%conf, $agent, 'notify', $line);
+		}
+		elsif ($line =~ /^\s*TIER\s{1}/i) {
+			&_agent_params(\%conf, $agent, 'tier', $line);
+		}
+		elsif ($line =~ /^\s*SNMP\s{1}/i) {
+			&_agent_params(\%conf, $agent, 'snmp', $line);
+			if ($conf{$agent}{snmp_mibs}) {
+				$conf{$agent}{snmp_check} = '1';
+			}
+		}
+		elsif ($line =~ /^\s*PING\s*/i) {
+			$conf{$agent}{ping_check} = "1";
+			&_agent_params(\%conf, $agent, 'ping', $line);
+		}
+		elsif ($line =~ /^\s*HTTP\s{1}/i) {
+			&_agent_params(\%conf, $agent, 'http', $line);
+			if ($conf{$agent}{http_url}) {
+				$conf{$agent}{http_check} = '1';
+			}
 		}
 		elsif ($line =~ /^\s*PLUGIN\s{1}/i) {
 			my $plugin_conf = $line;
 			$plugin_conf =~ s/mods=\".*?\"//;
-			&_agent_params(\%conf, $ip, 'plugin', $line);
-			&_agent_params_plugin(\%conf, $ip, 'plugin_conf', $plugin_conf);
+			&_agent_params(\%conf, $agent, 'plugin', $line);
+			&_agent_params_plugin(\%conf, $agent, 'plugin_conf', $plugin_conf);
 	
-			if ($conf{$ip}{plugin_mods}) {
-				$conf{$ip}{plugin_check} = '1';
+			if ($conf{$agent}{plugin_mods}) {
+				$conf{$agent}{plugin_check} = '1';
 			}
-		
-		}
-		elsif ($line =~ /^\s*TIER\s{1}/i) {
-			&_agent_params(\%conf, $ip, 'tier', $line);
 		}
 	}
 	close CFG;
@@ -336,7 +337,7 @@ sub _agent_config {
 }
 
 sub _agent_params {
-        my ($conf_ref, $ip, $func, $line) = @_;
+        my ($conf_ref, $agent, $func, $line) = @_;
         $line =~ s/^\s*$func\s*//img;
         return unless ($line);
         my @tmp = split(/"\s*/, $line);
@@ -346,13 +347,13 @@ sub _agent_params {
                 $param =~ tr/A-Z/a-z/;
                 my $value = shift @tmp;
 		my $func = $func . '_' . $param;
-                $conf_ref->{$ip}{$func} = $value;
+                $conf_ref->{$agent}{$func} = $value;
         }
 }
 
 # plugin specific assignments
 sub _agent_params_plugin {
-        my ($conf_ref, $ip, $func, $line) = @_;
+        my ($conf_ref, $agent, $func, $line) = @_;
         $line =~ s/^\s*plugin\s*//img;
         return unless ($line);
         my @tmp = split(/"\s*/, $line);
@@ -361,7 +362,7 @@ sub _agent_params_plugin {
                 $param =~ s/=//mg;
                 $param =~ tr/A-Z/a-z/;
                 my $value = shift @tmp;
-                $conf_ref->{$ip}{$func}{$param} = $value;
+                $conf_ref->{$agent}{$func}{$param} = $value;
         }
 }
 
@@ -380,114 +381,128 @@ sub get_pause_web		{ $_[0]->{default}{pause_web} }
 sub get_pause_box_index		{ $_[0]->{default}{pause_box_index} }
 sub get_pause_global		{ $_[0]->{default}{pause_global} }
 
-sub _next_ip {
-	my @ip_list = split (/ /, $_[0]->{agent_list});
-	my $ip = shift @ip_list;
-	$_[0]->{agent_list} = join ' ', @ip_list;
-	return $ip;
+sub _next_agent {
+	my @agent_list = split (/ /, $_[0]->{agent_list});
+	my $agent = shift @agent_list;
+	$_[0]->{agent_list} = join ' ', @agent_list;
+	return $agent;
 }
 sub _name {
-	my ($self, $ip) = @_;
-	$self->{$ip}{id_name};
+	my ($self, $agent) = @_;
+	$self->{$agent}{id_name};
 }
 sub _group {
-	my ($self, $ip) = @_;
-	$self->{$ip}{id_group};
+	my ($self, $agent) = @_;
+	$self->{$agent}{id_group};
 }
 
+sub _ip {
+	my ($self, $agent) = @_;
+	$self->{$agent}{id_ip};
+}
+
+
 sub _notify_method_1 { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{notify_method_1}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_method_1}; 
 }
 sub _notify_method_2 { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{notify_method_2}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_method_2}; 
 }
 sub _notify_method_3 { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{notify_method_3}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_method_3}; 
 }
 
 sub _notify_level { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{notify_level}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_level}; 
 }
 sub _notify_cap { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{notify_cap}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_cap}; 
 }
 
 sub _notify_email_1 { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{notify_email_1}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_email_1}; 
 }
 sub _notify_email_2 { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{notify_email_2}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_email_2}; 
 }
 sub _notify_email_3 { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{notify_email_3}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_email_3}; 
 }
 
 sub _notify_exec_1 { 
-	my ($self, $ip) = @_;
-	$self->{ip}{notify_exec_1}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_exec_1}; 
 }
 sub _notify_exec_2 { 
-	my ($self, $ip) = @_;
-	$self->{ip}{notify_exec_2}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_exec_2}; 
 }
 sub _notify_exec_3 { 
-	my ($self, $ip) = @_;
-	$self->{ip}{notify_exec_3}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_exec_3}; 
 }
 
+
 sub _ping_timeout {
-	my ($self, $ip) = @_;
-        $self->{$ip}{ping_timeout};
+	my ($self, $agent) = @_;
+        $self->{$agent}{ping_timeout};
+}
+sub _ping_ip {
+	my ($self, $agent) = @_;
+	unless ($self->{$agent}{ping_ip}) {
+		$self->{$agent}{ping_ip} = $self->_ip($agent);
+	}
+        $self->{$agent}{ping_ip};
 }
 sub _http_url {
-	my ($self, $ip) = @_;
-        $self->{$ip}{http_url};
+	my ($self, $agent) = @_;
+        $self->{$agent}{http_url};
 }
 sub _http_search {
-	my ($self, $ip) = @_;
-        $self->{$ip}{http_search};
+	my ($self, $agent) = @_;
+        $self->{$agent}{http_search};
 }
 sub _snmp_mibs {
-	my ($self, $ip) = @_;
-        $self->{$ip}{snmp_mibs};
+	my ($self, $agent) = @_;
+        $self->{$agent}{snmp_mibs};
 }
 sub _snmp_community { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{snmp_community}; 
+	my ($self, $agent) = @_;
+	$self->{$agent}{snmp_community}; 
 }
 sub _plugin_mods {
-	my ($self, $ip) = @_;
-	$self->{$ip}{plugin_mods};
+	my ($self, $agent) = @_;
+	$self->{$agent}{plugin_mods};
 }
 
 sub _plugin_conf {
-	my ($self, $ip) = @_;
-	if ($self->{$ip}{plugin_conf}->{filecheck_test}) {
-		#print "BUG? $ip: ", $self->{$ip}{plugin_conf}->{filecheck_test}, ".\n";
+	my ($self, $agent) = @_;
+	if ($self->{$agent}{plugin_conf}->{filecheck_test}) {
+		#print "BUG? $agent: ", $self->{$agent}{plugin_conf}->{filecheck_test}, ".\n";
 	}
 
-	return %{$self->{$ip}{plugin_conf}};
+	return %{$self->{$agent}{plugin_conf}};
 }
 
 sub _notify_errlev_reset {
-	my ($self, $ip) = @_;
-	$self->{$ip}{notify_errlev_reset};
+	my ($self, $agent) = @_;
+	$self->{$agent}{notify_errlev_reset};
 }
 sub _tier_support { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{tier_support} 
+	my ($self, $agent) = @_;
+	$self->{$agent}{tier_support} 
 }
 sub _tier_promote { 
-	my ($self, $ip) = @_;
-	$self->{$ip}{tier_promote} 
+	my ($self, $agent) = @_;
+	$self->{$agent}{tier_promote} 
 }
 
 
@@ -495,20 +510,20 @@ sub _tier_promote {
 # returns true if function is to be performed for the specified agent.
 #
 sub _ping_check {
-        my ($self, $ip) = @_;
-        $self->{$ip}{ping_check};
+        my ($self, $agent) = @_;
+        $self->{$agent}{ping_check};
 }
 sub _http_check {
-        my ($self, $ip) = @_;
-        $self->{$ip}{http_check};
+        my ($self, $agent) = @_;
+        $self->{$agent}{http_check};
 }
 sub _snmp_check {
-        my ($self, $ip) = @_;
-        $self->{$ip}{snmp_check};
+        my ($self, $agent) = @_;
+        $self->{$agent}{snmp_check};
 }
 sub _plugin_check {
-	my ($self, $ip) = @_;
-	$self->{$ip}{plugin_check};
+	my ($self, $agent) = @_;
+	$self->{$agent}{plugin_check};
 }
 
 
@@ -519,39 +534,41 @@ sub _plugin_check {
 #
 sub get_next_agent {
         my $self = shift;
-	my $ip = $self->_next_ip();
-	unless ($ip)	{ return undef; }
+	my $agent = $self->_next_agent();
+	unless ($agent)	{ return undef; }
 
 	return penemo::agent::->new( 
-					ip              => $ip, 
-					name		=> $self->_name($ip),
+					aid             => $agent, 
+					ip              => $self->_ip($agent),
+					name		=> $self->_name($agent),
 	
-					ping_check	=> $self->_ping_check($ip),
-					ping_timeout    => $self->_ping_timeout($ip), 
-					http_check	=> $self->_http_check($ip),
-					http_url        => $self->_http_url($ip), 
-					http_search     => $self->_http_search($ip), 
-					snmp_check	=> $self->_snmp_check($ip),
-					snmp_community  => $self->_snmp_community($ip),
-					snmp_mibs	=> $self->_snmp_mibs($ip), 
-					plugin_check	=> $self->_plugin_check($ip),
-					plugin_mods	=> $self->_plugin_mods($ip),
-					plugin_conf	=> { $self->_plugin_conf($ip) },
-					group		=> $self->_group($ip),
-					notify_method_1	=> $self->_notify_method_1($ip),
-					notify_method_2	=> $self->_notify_method_2($ip),
-					notify_method_3	=> $self->_notify_method_3($ip),
-					notify_level	=> $self->_notify_level($ip),
-					notify_cap	=> $self->_notify_cap($ip),
-					notify_email_1	=> $self->_notify_email_1($ip),
-					notify_email_2	=> $self->_notify_email_2($ip),
-					notify_email_3	=> $self->_notify_email_3($ip),
-					notify_exec_1	=> $self->_notify_exec_1($ip),
-					notify_exec_2	=> $self->_notify_exec_2($ip),
-					notify_exec_3	=> $self->_notify_exec_3($ip),
-					tier_support	=> $self->_tier_support($ip),
-					tier_promote	=> $self->_tier_promote($ip),
-					notify_errlev_reset	=> $self->_notify_errlev_reset($ip),
+					ping_check	=> $self->_ping_check($agent),
+					ping_timeout    => $self->_ping_timeout($agent), 
+					ping_ip		=> $self->_ping_ip($agent),
+					http_check	=> $self->_http_check($agent),
+					http_url        => $self->_http_url($agent), 
+					http_search     => $self->_http_search($agent), 
+					snmp_check	=> $self->_snmp_check($agent),
+					snmp_community  => $self->_snmp_community($agent),
+					snmp_mibs	=> $self->_snmp_mibs($agent), 
+					plugin_check	=> $self->_plugin_check($agent),
+					plugin_mods	=> $self->_plugin_mods($agent),
+					plugin_conf	=> { $self->_plugin_conf($agent) },
+					group		=> $self->_group($agent),
+					notify_method_1	=> $self->_notify_method_1($agent),
+					notify_method_2	=> $self->_notify_method_2($agent),
+					notify_method_3	=> $self->_notify_method_3($agent),
+					notify_level	=> $self->_notify_level($agent),
+					notify_cap	=> $self->_notify_cap($agent),
+					notify_email_1	=> $self->_notify_email_1($agent),
+					notify_email_2	=> $self->_notify_email_2($agent),
+					notify_email_3	=> $self->_notify_email_3($agent),
+					notify_exec_1	=> $self->_notify_exec_1($agent),
+					notify_exec_2	=> $self->_notify_exec_2($agent),
+					notify_exec_3	=> $self->_notify_exec_3($agent),
+					tier_support	=> $self->_tier_support($agent),
+					tier_promote	=> $self->_tier_promote($agent),
+					notify_errlev_reset	=> $self->_notify_errlev_reset($agent),
 					current_tier	=> '1',
 	);
 }
@@ -577,7 +594,7 @@ sub organize_notification_info {
 
 	while () {
 		last unless ( my $agent = $self->_shift_notification_stack() );
-		my $ip = $agent->get_ip();
+		my $ip = $agent->get_aid();
 
 		my $method = '';
 		my $email = '';
@@ -685,12 +702,13 @@ sub organize_notification_info {
 			
 			
 			$self->{notification_org}{$email}{$ip}{ping_msg} = 
-					$agent->get_ping_message(); 
+					$agent->get_ping_err_message(); 
 			$self->{notification_org}{$email}{$ip}{http_get_msg} =
 					$agent->get_http_get_message();
 			$self->{notification_org}{$email}{$ip}{http_search_msg} =
 					$agent->get_http_search_message();
 			$self->{notification_org}{$email}{$ip}{name} = $agent->get_name();
+			$self->{notification_org}{$email}{$ip}{aid} = $agent->get_aid();
 
 			# global setting for each notification message (object)
 			$self->{notification_org}{$email}{current_tier} = $agent->get_current_tier();
@@ -748,7 +766,7 @@ sub organize_notification_info {
 			
 			
 			$self->{notification_org}{notify}{$ip}{ping_msg} = 
-					$agent->get_ping_message(); 
+					[@{$agent->get_ping_message()}]; 
 			$self->{notification_org}{notify}{$ip}{http_get_msg} =
 					$agent->get_http_get_message();
 			$self->{notification_org}{notify}{$ip}{http_search_msg} =
@@ -841,7 +859,6 @@ sub index_html_write {
 		print HTML "<FONT SIZE=3><B>", $self->get_instance_name(), "</B></FONT><BR>\n";
 		print HTML "\t<FONT SIZE=2><B><FONT COLOR=\"#CC11AA\">penemo</FONT> "; 
 		print HTML "version $version</B></FONT><BR>\n"; 
-		#print HTML "<HR WIDTH=60%>\n"; 
 		print HTML "<FONT SIZE=2>penemo last run: <FONT COLOR=\"#AAAAAA\">$date</FONT></FONT><BR>\n"; 
 		print HTML "</CENTER>\n"; 
 
@@ -849,25 +866,24 @@ sub index_html_write {
 		print HTML "<TABLE WITH=600 ALIGN=CENTER BORDER=0 CELLPADDING=4>\n";
 
 		if (($self->get_pause_global()) && ($self->get_pause_web())) {
-			my $iplist = '';
+			my $agentlist = '';
 			my $tog = 0;
 			foreach my $agent (@agentlist) {
-				my $ip = $agent->get_ip();
+				my $aid = $agent->get_aid();
 				if ($agent->get_paused()) { $tog = 1; }
-				$iplist ||= ''; 
-				$iplist .= "$ip|";
+				$agentlist ||= ''; 
+				$agentlist .= "$aid|";
 			}
 			
 			print HTML "<TR><TD WIDTH=600 ALIGN=CENTER COLSPAN=4>\n";
-			#print HTML "&nbsp;<BR>\n";
 
 			print HTML "<FONT COLOR=#3366FF SIZE=2>";
-			print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=", $iplist, "&pause=1\">";
+			print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=", $agentlist, "&pause=1\">";
 			print HTML "<FONT COLOR=#4455FF SIZE=2>global pause</FONT></A>]</FONT>\n"; 
 
 			if ($tog) {
 				print HTML "<FONT COLOR=#3366FF SIZE=2>";
-				print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=", $iplist, "&unpause=1\">";
+				print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=", $agentlist, "&unpause=1\">";
 				print HTML "<FONT COLOR=#4455FF SIZE=2>global unpause</FONT></A>]</FONT>\n"; 
 			}
 			print HTML "<BR>\n";
@@ -881,6 +897,7 @@ sub index_html_write {
 			print HTML "</TD></TR>\n";
 			foreach my $agent (@agentlist) { 
 				my $ip = $agent->get_ip();
+				my $aid = $agent->get_aid();
 				if ($agent->get_group() eq "$group") { 
 					print HTML "<TR><TD WIDTH=125 ALIGN=LEFT>\n";
 					print HTML "<FONT SIZE=3 COLOR=\"#AAAAAA\">\n"; 
@@ -899,7 +916,7 @@ sub index_html_write {
 						print HTML "$ok_light  ";
 					} 
 					print HTML "<FONT SIZE=2>\n";
-					print HTML "<A HREF=\"agents/$ip/index.html\">$ip</A><BR>\n";
+					print HTML "<A HREF=\"agents/$aid/index.html\">$aid</A><BR>\n";
 					print HTML "</FONT>\n";
 					print HTML "</TD>\n";
 					if ( ($self->get_pause_web()) && ($self->get_pause_box_index()) ) {
@@ -943,7 +960,7 @@ sub index_html_write {
 					
 					if ( (! $agent->get_paused()) && ($self->get_pause_web()) && ($self->get_pause_box_index()) ) {
 						print HTML "<FORM METHOD=\"Post\" action=\"/cgi-bin/penemo-admin.cgi\">\n";
-						print HTML '<INPUT TYPE=HIDDEN NAME=agent VALUE=', $ip, '>', "\n";
+						print HTML '<INPUT TYPE=HIDDEN NAME=agent VALUE=', $aid, '>', "\n";
 						print HTML '<INPUT TYPE=HIDDEN NAME=pause VALUE=pause>', "\n";
 						print HTML '<FONT SIZE=2><FONT COLOR=#6666FF>format:</FONT> DD:HH:MM</FONT><BR>', "\n";
 						print HTML '<INPUT type=text name="time" size=8 maxlength=10> ', "\n";
@@ -954,21 +971,18 @@ sub index_html_write {
 						print HTML "<FONT COLOR=#AAAADD SIZE=1><I>untill: ",
 							$agent->get_paused_end(), "</I></FONT><BR>\n";
 						print HTML "<FONT COLOR=#3366FF SIZE=1>";
-						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?unpause=1&agent=$ip\">";
+						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?unpause=1&agent=$aid\">";
 						print HTML "<FONT COLOR=#4455FF SIZE=1>unpause</FONT></A>]</FONT><BR>\n"; 
 					}
 					elsif ($self->get_pause_web()) {
 						print HTML "<FONT COLOR=#3366FF SIZE=1>";
-						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?pause=1&agent=$ip\">";
+						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?pause=1&agent=$aid\">";
 						print HTML "<FONT COLOR=#4455FF SIZE=1>pause</FONT></A>]</FONT><BR>\n"; 
 					}
 					print HTML "</FONT>\n";
 					print HTML "</TD></TR>\n";
 				} 
 			} 
-			#print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=4>\n";
-			#print HTML "&nbsp;<BR>\n"; 
-			#print HTML "</TD></TR>\n";
 		} 
 
 		print HTML "</TABLE>\n";
@@ -1006,14 +1020,14 @@ sub new {
 sub get_method {
 	$_[0]->{_method};
 }
-sub _get_iplist {
-	my @iplist = ();
+sub _get_agentlist {
+	my @agentlist = ();
 	foreach my $key (keys %{$_[0]}) {
 		next if ($key eq '_method');
 		next if ($key eq 'current_tier');
-		push @iplist, $key;
+		push @agentlist, $key;
 	}
-	return (@iplist);
+	return (@agentlist);
 }
 
 # the following type_check and type_msg methods require the IP 
@@ -1021,81 +1035,86 @@ sub _get_iplist {
 
 # ping
 sub _get_ping_check {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{ping_check});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{ping_check});	
 }
 sub _get_ping_status {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{ping_status});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{ping_status});	
 }
 sub _get_ping_msg {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{ping_msg});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{ping_msg});	
 }
 
 # http
 sub _get_http_check {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{http_check});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{http_check});	
 }
 sub _get_http_status {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{http_status});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{http_status});	
 }
 sub _get_http_get_status {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{http_get_status});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{http_get_status});	
 }
 sub _get_http_search_status {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{http_search_status});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{http_search_status});	
 }
 sub _get_http_get_msg {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{http_get_msg});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{http_get_msg});	
 }
 sub _get_http_search_msg {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{http_search_msg});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{http_search_msg});	
 }
 
 # snmp
 sub _get_snmp_check {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{snmp_check});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{snmp_check});	
 }
 sub _get_snmp_status {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{snmp_status});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{snmp_status});	
 }
 sub _get_snmp_msg {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{snmp_msg});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{snmp_msg});	
 }
 
 # plugin
 sub _get_plugin_check {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{plugin_check});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{plugin_check});	
 }
 sub _get_plugin_status {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{plugin_status});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{plugin_status});	
 }
 sub _get_plugin_msg {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{plugin_msg});	
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{plugin_msg});	
 }
 
 # global per object
 sub _get_name {
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{name});
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{name});
+}
+sub _get_aid {
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{aid});
 }
 
+
 sub _get_resolved { 
-	my ($self, $ip) = @_;
-	return ($self->{$ip}{resolved});
+	my ($self, $agent) = @_;
+	return ($self->{$agent}{resolved});
 }
 sub _get_current_tier {
 	my ($self) = @_;
@@ -1106,17 +1125,18 @@ sub _get_current_tier {
 
 sub email {
 	my ($self, $instance, $version) = @_;
-	my @iplist = $self->_get_iplist();
+	my @agentlist = $self->_get_agentlist();
 	my @msg = ();
 
-	foreach my $ip (@iplist) {
-		my $name = $self->_get_name($ip);
-		push @msg, "$ip : $name\n";
-		if ($self->_get_resolved($ip)) {
+	foreach my $agent (@agentlist) {
+		my $aid = $self->_get_aid($agent);
+		my $name = $self->_get_name($agent);
+		push @msg, "$aid : $name\n";
+		if ($self->_get_resolved($agent)) {
 			push @msg, "  all errors resolved.\n";
 		}
 		else {
-			my @tmp = $self->_get_message($ip);
+			my @tmp = $self->_get_message($agent);
 			foreach my $line (@tmp) {
 				push @msg, $line;
 			}
@@ -1159,37 +1179,36 @@ sub execute {
 
 
 sub _get_message {
-	my ($self, $ip) = @_;
+	my ($self, $agent) = @_;
 	my @msg = ();
-	if ( ($self->_get_ping_check($ip)) && (! $self->_get_ping_status($ip)) ) {
-		my $msg = $self->_get_ping_msg($ip);
-		chomp $msg;
-		my $line = "  ping: $msg\n";
+	if ( ($self->_get_ping_check($agent)) && (! $self->_get_ping_status($agent)) ) {
+		my $msg = join("\n", $self->_get_ping_msg($agent));
+		my $line = "  ping: $msg";
 		push @msg, $line;
 	}
-	if ($self->_get_http_check($ip)) {
-		unless ($self->_get_http_get_status($ip)) {
-			my $msg = $self->_get_http_get_msg($ip);
+	if ($self->_get_http_check($agent)) {
+		unless ($self->_get_http_get_status($agent)) {
+			my $msg = $self->_get_http_get_msg($agent);
 			chomp $msg;
 			my $line = "  http: $msg\n";
 			push @msg, $line;
 		}
-		elsif ( (! $self->_get_http_search_status($ip)) && 
-				($self->_get_http_search_msg($ip)) ) {
-			my $msg = $self->_get_http_search_msg($ip);
+		elsif ( (! $self->_get_http_search_status($agent)) && 
+				($self->_get_http_search_msg($agent)) ) {
+			my $msg = $self->_get_http_search_msg($agent);
 			chomp $msg;
 			my $line = "  http: $msg\n";
 			push @msg, $line;
 		}
 	}
-	if ( ($self->_get_snmp_check($ip)) && (! $self->_get_snmp_status($ip)) ) {
-		my $msg = $self->_get_snmp_msg($ip);
+	if ( ($self->_get_snmp_check($agent)) && (! $self->_get_snmp_status($agent)) ) {
+		my $msg = $self->_get_snmp_msg($agent);
 		chomp $msg;
 		my $line = "  snmp: $msg\n";
 		push @msg, $line;
 	}
-	if ( ($self->_get_plugin_check($ip)) && (! $self->_get_plugin_status($ip)) ) {
-		my $msg = $self->_get_plugin_msg($ip);
+	if ( ($self->_get_plugin_check($agent)) && (! $self->_get_plugin_status($agent)) ) {
+		my $msg = $self->_get_plugin_msg($agent);
 		chomp $msg;
 		my $line = "  plugin: $msg\n";
 		push @msg, $line;

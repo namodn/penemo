@@ -30,10 +30,12 @@ sub new {
 	my %args = @_;
 
         my $self = bless {
+                        aid		=> $args{aid},   # aid = agent ID
                         ip		=> $args{ip},
 			name		=> $args{name},
 			ping_check	=> $args{ping_check},
                         ping_timeout	=> $args{ping_timeout},
+                        ping_ip	        => $args{ping_ip},
 			http_check	=> $args{http_check},
                         http_url	=> $args{http_url},
                         http_search	=> $args{http_search},
@@ -61,6 +63,7 @@ sub new {
                         ping_status		=> '0',
 			ping_errlev		=> '0',
                         ping_message		=> '',
+                        ping_err_message	=> '',
                         http_status		=> '0',
                         http_get_status		=> '0',
 			http_get_message	=> '',
@@ -100,11 +103,11 @@ sub new {
 
 sub load_persistent_data {
 	my ($self, $dir_data) = @_;
-	my $ip = $self->get_ip();
+	my $aid = $self->get_aid();
 
-	if (-f "$dir_data/$ip")
+	if (-f "$dir_data/$aid")
 	{ 
-		open (DATA, "$dir_data/$ip") or penemo::core->notify_die("Can't open $dir_data/$ip: $!\n"); 
+		open (DATA, "$dir_data/$aid") or penemo::core->notify_die("Can't open $dir_data/$aid: $!\n"); 
 			my @lines = <DATA>;
 		close DATA;
 		my (@data) = split(/\s+/, $lines[0]); 
@@ -129,7 +132,7 @@ print "\t\tcurrent_tier: $data[4], notifications_sent: $data[5]\n";
 
 sub write_persistent_data {
 	my ($self, $dir_data) = @_;
-	my $ip = $self->get_ip();
+	my $aid = $self->get_aid();
 
 	unless ($self->get_error_detected) { $self->set_current_tier('1'); }
 
@@ -142,14 +145,15 @@ sub write_persistent_data {
 	my $paused = $self->get_paused();
 	my $paused_end = $self->get_paused_end();
 	
-	open (DATA, ">$dir_data/$ip") or penemo::core->notify_die("Can't open $dir_data/$ip: $!\n");
+	open (DATA, ">$dir_data/$aid") or penemo::core->notify_die("Can't open $dir_data/$aid: $!\n");
 		print DATA "$ping_errlev\t$http_errlev\t$snmp_errlev\t$plugin_errlev\t$current_tier\t$notifications_sent\t$paused\t$paused_end\n";
 	close DATA;
 
-	system("chmod g=rw $dir_data/$ip");
+	system("chmod g=rw $dir_data/$aid");
 }
 
 
+sub get_aid 			{ $_[0]->{aid} }
 sub get_ip 			{ $_[0]->{ip} }
 sub get_name			{ $_[0]->{name} }
 sub get_group			{ $_[0]->{group} }
@@ -243,8 +247,10 @@ sub plugin_check 		{ $_[0]->{plugin_check} }
 # ping check methods
 sub get_ping_status             { $_[0]->{ping_status} }
 sub get_ping_message            { $_[0]->{ping_message} }
+sub get_ping_err_message        { $_[0]->{ping_err_message} }
 sub get_ping_errlev             { $_[0]->{ping_errlev} }
 sub get_ping_timeout 		{ $_[0]->{ping_timeout} }
+sub get_ping_ip 		{ $_[0]->{ping_ip} }
 
 # http check methods
 sub get_http_status             { $_[0]->{http_status} }
@@ -347,8 +353,14 @@ sub _set_ping_status {
 	$self->{ping_status} = $set;
 }
 sub _set_ping_message {
-	my ($self, $set) = @_;
-	$self->{ping_message} = $set;
+	my ($self, @set) = @_;
+	my $set_string = join("\n", @set);
+	$self->{ping_message} = $set_string;
+}
+sub _set_ping_err_message {
+	my ($self, @set) = @_;
+	my $set_string = join("\n", @set);
+	$self->{ping_err_message} = $set_string;
 }
 sub _set_http_status {
 	my ($self, $set) = @_;
@@ -434,7 +446,7 @@ sub set_plugin_errlev {
 sub DESTROY {
         my ($self) = @_;
         $self->_decr_count();
-        print "terminating: ", $self->get_name(), "\n";
+        print "terminating: ", $self->get_aid(), "\n";
 }
 
 
@@ -448,31 +460,49 @@ sub DESTROY {
 
 # ping agent, return status.
 sub ping {
+        my $self = shift;
         use Net::Ping;
 
-        my $self = $_[0];
-        my ($ip, $pings) = ( $self->get_ip, $self->get_ping_timeout() );
-        my $pingobj = Net::Ping->new( $> ? "udp" : "icmp", $pings);
+        my @ips = (); 
+	my $pings = $self->get_ping_timeout();
 
+	my @msg = ();
+	my @errmsg = ();
         my $stat;
-        my $msg;
 
-        if ($pingobj->ping($ip)) {
-                $pingobj->close();
-                my @temp = `ping -c $pings $ip`;
-                chomp $temp[1];
-                $stat = '1';
-                $msg = $temp[1];
-        }
-        else {
-                $pingobj->close();
-                $stat = '0';
-                $msg = 'Unsuccessful';
+	unless ( $self->get_ping_ip() ) {
+		$stat = 0;
+		push @errmsg, 'no ip specified to ping. ( ip="ip < ip ip >" )';
 		$self->set_ping_errlev('+');
-        }
+	}
+	else {
+		@ips = ( split(/\s+/, $self->get_ping_ip()) ); 
+		foreach my $ip (@ips) {
+        		my $pingobj = Net::Ping->new( $> ? "udp" : "icmp", $pings);
+			
+		
+		        if ($pingobj->ping($ip)) {
+		                my @temp = `ping -c $pings $ip`;
+		                chomp $temp[1];
+		                $stat = '1';
+		                push @msg, $temp[1];
+		        }
+		        else {
+		                $stat = '0';
+		                push @errmsg, "$ip";
+				$self->set_ping_errlev('+');
+		        }
+	
+	                $pingobj->close();
+		}
+	}
+
+	chomp @msg;
+	chomp @errmsg;
 
         $self->_set_ping_status("$stat");
-	$self->_set_ping_message("$msg"); 
+	$self->_set_ping_message(@msg); 
+	$self->_set_ping_err_message(@errmsg); 
 
 }
 
@@ -557,7 +587,7 @@ sub snmp {
         my ($self, $dir_plugin, $dir_ucd_bin) = @_;
         my $ip        = $self->get_ip;
 	my $community = $self->get_snmp_community();
-	my (@mibs) = split(/ /, $self->get_snmp_mibs());
+	my (@mibs) = split(/\s+/, $self->get_snmp_mibs());
 	my $error_detected = 0;
 	
 	foreach my $mib (@mibs) {
@@ -571,7 +601,7 @@ sub snmp {
 		if ($mib eq 'mib2') {$mib = 'mib-2';}
 
 		$snmp->poll();
-	
+
 		unless ($snmp->status()) {
 			$self->_set_snmp_status($mib, '0');
 			$self->_set_snmp_message($mib, $snmp->message());
@@ -661,6 +691,7 @@ sub write_agent_html
 {
 	my ($self, $dir_html) = @_;
 	my $ip = $self->get_ip();
+	my $aid = $self->get_aid();
 	my $name = $self->get_name();
 
 	my $ok_light = penemo::core->html_image('agent', 'ok'); 
@@ -671,14 +702,14 @@ sub write_agent_html
 		system("mkdir $dir_html/agents"); 
 	}
 
-	unless (-d "$dir_html/agents/$ip") { 
-		system("mkdir $dir_html/agents/$ip"); 
+	unless (-d "$dir_html/agents/$aid") { 
+		system("mkdir $dir_html/agents/$aid"); 
 	}
 
 	# write agents conf.html
 	#
-	open(CONF, ">$dir_html/agents/$ip/conf.html") 
-		or penemo::core->notify_die("Can't open $dir_html/agents/$ip/conf.html to write: $!\n"); 
+	open(CONF, ">$dir_html/agents/$aid/conf.html") 
+		or penemo::core->notify_die("Can't open $dir_html/agents/$aid/conf.html to write: $!\n"); 
 	print CONF "<HTML>\n"; 
 	print CONF "<HEAD>\n"; 
 	print CONF "\t<TITLE>penemo -- Status on $ip</TITLE>\n"; 
@@ -686,7 +717,7 @@ sub write_agent_html
 	print CONF "<BODY BGCOLOR=\"#000000\" TEXT=\"#338877\" "; 
 	print CONF "LINK=\"#AAAAAA\" VLINK=\"#AAAAAA\">\n"; 
 	print CONF "<CENTER>\n"; 
-	print CONF "\t<FONT SIZE=5><B>$ip - $name</B></FONT>\n"; 
+	print CONF "\t<FONT SIZE=3><B>$aid - $name - $ip</B></FONT>\n"; 
 	print CONF "<HR WIDTH=50%>\n"; 
 	print CONF "</CENTER>\n"; 
 	print CONF "&nbsp;<BR>\n";
@@ -760,17 +791,17 @@ sub write_agent_html
 
 	# write agents index.html
 	#
-	open(HTML, ">$dir_html/agents/$ip/index.html") 
-		or penemo::core->notify_die("Can't open $dir_html/agents/$ip/index.html to write: $!\n"); 
+	open(HTML, ">$dir_html/agents/$aid/index.html") 
+		or penemo::core->notify_die("Can't open $dir_html/agents/$aid/index.html to write: $!\n"); 
 
 	print HTML "<HTML>\n"; 
 	print HTML "<HEAD>\n"; 
-	print HTML "\t<TITLE>penemo -- Status on $ip</TITLE>\n"; 
+	print HTML "\t<TITLE>penemo -- Status on $aid</TITLE>\n"; 
 	print HTML "</HEAD>\n"; 
 	print HTML "<BODY BGCOLOR=\"#000000\" TEXT=\"#338877\" "; 
 	print HTML "LINK=\"#AAAAAA\" VLINK=\"#AAAAAA\">\n"; 
 	print HTML "<CENTER>\n"; 
-	print HTML "\t<FONT SIZE=5><B>$ip - $name</B></FONT>\n"; 
+	print HTML "\t<FONT SIZE=3><B>$aid - $name - $ip</B></FONT>\n"; 
 	print HTML "<HR WIDTH=50%>\n"; 
 
 	print HTML "[<A HREF=\"conf.html\">current agent config</A>]  \n"; 
@@ -779,15 +810,15 @@ sub write_agent_html
 		unless (-d "$dir_html/agentdump") {
 			system("mkdir $dir_html/agentdump");
 		}
-		if (-f "$dir_html/agentdump/$ip") {
-			system("rm $dir_html/agentdump/$ip");
+		if (-f "$dir_html/agentdump/$aid") {
+			system("rm $dir_html/agentdump/$aid");
 		}
 		foreach my $mib (@mibs) {
-			if (-f "$dir_html/agentdump/$ip") {
+			if (-f "$dir_html/agentdump/$aid") {
 			}
-			penemo::core->file_write(">>$dir_html/agentdump/$ip", $self->get_snmp_walk($mib));
+			penemo::core->file_write(">>$dir_html/agentdump/$aid", $self->get_snmp_walk($mib));
 		}
-		print HTML "[<A HREF=\"../../agentdump/$ip\">current snmp info</A>]<BR>\n"; 
+		print HTML "[<A HREF=\"../../agentdump/$aid\">current snmp info</A>]<BR>\n"; 
 	} 
 	else {
 		print HTML "<BR>\n";
@@ -808,14 +839,18 @@ sub write_agent_html
 			else {
 				print HTML "$warn_light\n";
 			}
-			print HTML "<FONT COLOR=\"#DD1111\">Can't ping $ip !! "; 
-			print HTML "Machine might be down!</FONT><BR>\n"; 
+			my $msg = $self->get_ping_err_message(); 
+			print HTML "<FONT COLOR=\"#DD1111\">Can't ping $aid: "; 
+			print HTML $msg;
+			print HTML "</FONT><BR>\n"; 
 			print HTML "<BR>\n";
 		} 
 		else {
+			my $msg = $self->get_ping_message(); 
+
 			print HTML "<FONT COLOR=\"#AAAAAA\" SIZE=1><I>PING</I></FONT><BR>\n";
 			print HTML "$ok_light\n"; 
-			print HTML "<FONT COLOR=\"#11AA11\">", $self->get_ping_message(), "</FONT><BR>\n"; 
+			print HTML "<FONT COLOR=\"#11AA11\">$msg</FONT><BR>\n"; 
 			print HTML "<BR>\n";
 		}
 	} 

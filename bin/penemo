@@ -71,9 +71,10 @@ while () {
 # foreach agent, perform the run down
 foreach my $agent (@agents) {
 	my $ip = $agent->get_ip();
+	my $aid = $agent->get_aid();
 
 	# load persistent data ( error levels etc. ) into $agent object
-	print "- $ip: ", $agent->get_name(), "\n";
+	print "- $aid: ", $agent->get_name(), "\n";
 	$agent->load_persistent_data($conf->get_dir_data());
 
 	print "\t\tnotify_level: ", $agent->get_notify_level(),
@@ -83,13 +84,13 @@ foreach my $agent (@agents) {
 	if ($agent->get_paused()) {
 		if ($agent->get_paused_end <= $date_string) {
 			# unpause agent
-			print "  $ip: time to unpause agent.\n";
+			print "  $aid: time to unpause agent.\n";
 			$agent->set_paused('0');
 			$agent->set_paused_end('000000000000');
 		}
 		else {
 			# keep agent paused
-			print "  $ip: agent is paused, skipping.\n";
+			print "  $aid: agent is paused, skipping.\n";
 			$conf->push_html_agentlist($agent);
 			next;
 		}
@@ -110,7 +111,7 @@ foreach my $agent (@agents) {
 		if ( ($agent->get_notify_cap()) && 
 				($agent->get_notify_cap() <= $agent->get_notifications_sent()) ) {
 			# don't set stack bit
-			print "  $ip: notification cap reached, no notify sent.\n";
+			print "  $aid: notification cap reached, no notify sent.\n";
 		}
 		else {
 			my $stack = 0;   # true if agent is to be stacked.
@@ -153,7 +154,7 @@ foreach my $agent (@agents) {
 			# notifications have been sent, but now, no errors detected.
 			# add to notification stack, for resolved notification.
 			$conf->push_notification_stack($agent);	
-			print "  $ip: error(s) resolved.\n";
+			print "  $aid: error(s) resolved.\n";
 			# error on this agent has been resolved
 			$agent->set_error_resolved('1');
 		}
@@ -161,7 +162,7 @@ foreach my $agent (@agents) {
 		$agent->set_notifications_sent('0');
 	}
 	# write agent html
-	print "  $ip: writing agents html file.\n";
+	print "  $aid: writing agents html file.\n";
 	$agent->write_agent_html( $conf->get_dir_html() );
 	# add to list of agents for index html
 	$conf->push_html_agentlist($agent);
@@ -188,7 +189,7 @@ my @notification_objects = $conf->get_notification_object_array();
 # done here because get_notification_objects_array modifies errlevs
 foreach my $agent (@agents) {
 	# write current errorlevels and misc agent data to file
-	#print "  ", $agent->get_ip(), ": writing agent data.\n";
+	#print "  ", $agent->get_aid(), ": writing agent data.\n";
 	$agent->write_persistent_data($conf->get_dir_data());
 }
 
@@ -222,11 +223,11 @@ exit;
 # agent check subroutine, takes the $agent reference as a parameter.
 sub ping_check {
 	my $agent = $_[0];
-	my $ip = $agent->get_ip();
+	my $aid = $agent->get_aid();
 
 	my $add_to_notification_stack = 0;
 	if ($agent->ping_check()) {
-		print "  $ip: ping status  : "; 
+		print "  $aid: ping status  : "; 
 		$agent->ping();
 		print $agent->get_ping_status();
 
@@ -251,10 +252,10 @@ sub ping_check {
 
 sub http_check {
 	my $agent = $_[0];
-	my $ip = $agent->get_ip();
+	my $aid = $agent->get_aid();
 
 	if ($agent->http_check()) {
-		print "  $ip: http status  : "; 
+		print "  $aid: http status  : "; 
 		$agent->http( $conf->get_http_command(), $conf->get_dir_cache() );
 		print $agent->get_http_status();
 
@@ -277,10 +278,10 @@ sub http_check {
 
 sub snmp_check {
 	my $agent = $_[0];
-	my $ip = $agent->get_ip();
+	my $aid = $agent->get_aid();
 
 	if ($agent->snmp_check()) {
-		print "  $ip: snmp status  : "; 
+		print "  $aid: snmp status  : "; 
 		$agent->snmp($conf->get_dir_plugin(), $conf->get_dir_ucd_bin());
 
 		my @snmp_mibs = split(/ /, $agent->get_snmp_mibs());
@@ -312,11 +313,11 @@ sub snmp_check {
 
 sub plugin_check {
 	my $agent = $_[0];
-	my $ip = $agent->get_ip();
+	my $aid = $agent->get_aid();
 
 
 	if ($agent->plugin_check()) {
-		print "  $ip: plugin status  : "; 
+		print "  $aid: plugin status  : "; 
 		$agent->plugin($conf->get_dir_plugin());
 
 		my @plugin_mods = split(/ /, $agent->get_plugin_mods());
@@ -350,8 +351,8 @@ sub plugin_check {
 
 sub add_to_notify_stack {
 	my $agent = $_[0];
-	my $ip = $agent->get_ip();
-	print "  $ip: error(s) detected adding to notification stack.\n";
+	my $aid = $agent->get_aid();
+	print "  $aid: error(s) detected adding to notification stack.\n";
 	$conf->push_notification_stack($agent);
 	$agent->set_have_notifications_been_sent('1');
 	# currently on the notification stack

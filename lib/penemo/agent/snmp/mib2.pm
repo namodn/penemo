@@ -70,7 +70,7 @@ sub poll {
 	if ($#walk <= '1') { 
 		$self->{status} = '0';
 		$self->{messages} = "agent didn't respond to poll.\n"; 
-		exit; 
+		return; 
 	}
 	else {
 		$self->{walk} = "@walk";

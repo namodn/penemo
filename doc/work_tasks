@@ -50,21 +50,20 @@
 
 [!] add ping $ip  so the pings arent agent ip specific
 
-[!] notify_exec (pain in the ass)
-    (note: try notify_exec_name to group by, instead of actual notify_exec)
-
-
 [!] localize all config options, so there is no "global" conf file (penemo.conf)
     they all reside in one conf file (agent.conf format) with a DEFAULT_CONFIG
     being the default for each agent.
 
 [!] command line parameters
 
-[!] agent history using penemo output, stored in a file, and a cgi (penemo-admin) to
+[!] agent history using penemo output, stored in a file, and a cgi (like cm.cgi) to
     run different queries on the data file etc. 
 
 
 ---
+[?] notify_exec (pain in the ass)
+    (note: try notify_exec_name to group by, instead of actual notify_exec)
+
 [?] implement multi-http checks.
 
 [?] it'd be nice to have some sort of informational page for agent history
