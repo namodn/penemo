@@ -26,14 +26,15 @@
       overlapping counts from different checks in same agent, resulting
       in more notifications than set in notify_level
 
+[x] yellow light for when an error is detected yet a notification is not 
+      being sent.
+
 
 [-] notify exec (pain in the ass)
     (note: try notify_exec_name to group by, instead of actual notify_exec)
 
 
-[!] notify_end (tells when to _stop_ notifying
-
-[!] yellow light for errors where notifications havent yet been sent
+[!] notify_cap (tells when to _stop_ notifying
 
 [!] config viewing from web
 
