@@ -6,11 +6,9 @@ use CGI::Carp;
 
 
 use lib '/usr/local/share/penemo/modules/';
-
 use penemo;
 
 my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
-
 my $agent_conf_file = '/usr/local/etc/penemo/agent.conf';
 
 my $conf = penemo::config->load_config($penemo_conf_file, $agent_conf_file);
@@ -155,7 +153,6 @@ sub convert_to_fulltime {
 	my $time = param('time');
 	if ($time > '60') { $time = '60'; }
 	my ($year, $month, $day, $hour, $minutes) = split(/-/, $date_delimited);
-	print "$date_delimited, year: $year month: $month day: $day hour: $hour min: $minutes\n";
 	my $calc = $minutes + $time;
 	if ($calc >= '60') {
 		$hour++;
@@ -188,7 +185,6 @@ sub convert_to_fulltime {
 
 sub convert_date_to_string {
         my @date = split (/\s/, $date); # Split on whitespace
-	print "", join(' ', @date), "\n";
         my ($month, $day, $time, $year) = ($date[1], $date[2], $date[3], $date[5]);
         $month = convert_month($month);
         my ($hour, $minutes, $seconds) = split(/:/, $time);
@@ -235,30 +231,3 @@ sub set_data {
 	close DATA;
 }
 
-
-#sub update_html_pause {
-#	my $time = shift;
-#	my $dir_html = $conf->get_dir_html();
-#	my @html = ();
-#
-#	open (HTML, "$dir_html/index.html") or die "Cant open $dir_html/index.html : $!\n";
-#		@html = <HTML>;
-#	close HTML;
-#
-#	open (HTML, ">$dir_html/index.html") or die "Cant open $dir_html/index.html : $!\n";
-#	foreach my $line (@html) {
-#		if ($line =~ /\<A HREF=\"agents\/$agent\/index.html\"\>/) {
-#			$line =~ s/green/blue/;	
-#			$line =~ s/red/blue/;	
-#		}	
-#		if ($line =~ /agent=\$agent&pause=1/) {
-#			$line =~ s/pause/unpause/;
-#			$line = "untill: $time<BR>" . $line;	
-#		}
-#		print HTML $line;
-#	}
-#	close HTML;
-#	
-#}
-#sub update_html_unpause {
-#}
