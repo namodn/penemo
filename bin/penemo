@@ -71,7 +71,7 @@ foreach my $agent (@agents) {
 	my $ip = $agent->get_ip();
 
 	# load persistent data ( error levels etc. ) into $agent object
-	print "- $ip: loading agent data.\n";
+	print "- $ip: ", $agent->get_name(), "\n";
 	$agent->load_persistent_data($conf->get_dir_data());
 
 	print "\t\tnotify_level: ", $agent->get_notify_level(),
