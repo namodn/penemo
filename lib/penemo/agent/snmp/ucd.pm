@@ -295,7 +295,7 @@ sub poll {
 
 		if ($snmp{'ucd'}{'enterprises.ucdavis.laTable.laEntry.laErrorFlag.' . $c} == '1') { 
 			push @html, "$bad_light\n"; 
-			my $errormsg = $snmp{'ucd'}{'enterprises.ucdavis.laTable.laEntry.laErrorMessage.' . $c}; 
+			my $errormsg = $snmp{'ucd'}{'enterprises.ucdavis.laTable.laEntry.laErrorFlag.' . $c}; 
 			# Load Average error on IP: $ip 
 			push @miberrors, "$errormsg\n"; 
 		} 
