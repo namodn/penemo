@@ -1,4 +1,4 @@
-penemo version: 1.0
+penemo version: 1.0 beta2
 
 Developed and Maintained,
 by: Nick Jennings, nick@namodn.com
@@ -41,7 +41,10 @@ CONFIGURATION
  there are two configuration files for penemo (in /usr/local/etc/penemo/).
 
         penemo.conf - this file covers all of the configuration options
-                      that specify how penemo is to run.
+                      that specify how penemo is to run. here is where
+		      you also specify the default values for agents,
+		      (these values are set if you havent specified
+		       otherwise in the agents.conf).
 
         agent.conf - this file covers the configuration for the agents
                      that penemo is to monitor. here you specify what
@@ -61,6 +64,10 @@ CONFIGURATION
  I recommend the following:
 
         # ln -s /usr/local/share/penemo/html <apache_html_dir>/penemo
+
+ or you can set the html output (dir_html directive) to write directly
+ to your webservers html data directory. (for example on debian system
+ I set dir_html /var/www/htdocs/penemo/)
 
 
 

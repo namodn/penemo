@@ -28,6 +28,7 @@
 #
 
 
+
 ############################
 ############################
 ############################
@@ -896,8 +897,7 @@ sub index_html_write {
 
 package penemo::agent;
 
-use lib '/home/nick/devel/penemo/modules/';
-
+use lib '/usr/local/share/penemo/modules/';
 use penemo::snmp;
 use penemo::plugin;
 
