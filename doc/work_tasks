@@ -18,8 +18,8 @@
 
 [x] replace all dies and errors with notify functionality.
 
+[x] extensive pausing features
 
-[-] extensive pausing features
 
 [-] snmp mibs dont have a way to notify on snmp alerts within mib check.
 

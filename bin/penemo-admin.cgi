@@ -58,7 +58,7 @@ sub pause {
 		print "<HEAD><TITLE>$agent paused</TITLE></HEAD>\n";
 		print '<BODY BGCOLOR="#000000" TEXT="#AAAADD">', "\n";
 		print "&nbsp;<BR>\n";
-		print "$agent paused till: $paused <BR>\n";
+		print "$agent paused untill: $paused <BR>\n";
 		print "&nbsp;<BR>\n";
 		print "html display will be updated next time penemo is run.<BR>\n";
 		print "</BODY>\n";
@@ -131,14 +131,19 @@ sub get_time {
 
 sub convert_to_fulltime {
 	my $time = param('time');
+	if ($time > '60') { $time = '60'; }
 	my ($year, $month, $day, $hour, $minutes) = split(/-/, $date_delimited);
-	my $calc = $day + $time;
+	my $calc = $minutes + $time;
 	if ($calc >= '60') {
 		$hour++;
 		$minutes = $calc - 60;
 	}	
 	else {
 		$minutes = $calc;
+	}
+
+	if ($minutes =~ /^\d{1}$/) {
+		$minutes = "0$minutes";
 	}
 	return ("$year$month$day$hour$minutes");
 }
