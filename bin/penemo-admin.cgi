@@ -5,7 +5,7 @@ use CGI qw(:standard);
 use CGI::Carp;
 
 
-use lib "$ENV{PENEMO_MODDIR}";
+use lib '/usr/local/share/penemo/lib/';
 use penemo;
 
 my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
@@ -21,13 +21,14 @@ my $date = `date`;
 chomp $date;
 $date =~ s/\s+/ /g;   # takeout any double spaces
 my ($date_string, $date_delimited) = &convert_date_to_string();
-my $agent = param('agent');
 
 if (param('pause')) {
-	&pause();
+	my $agent = param('agent');
+	&pause($agent);
 }
 elsif (param('unpause')) {
-	&unpause();
+	my $agent = param('agent');
+	&unpause($agent);
 }
 else {
 	die "nothing to do\n";
@@ -37,27 +38,43 @@ else {
 
 # sub for pausing agents.
 sub pause {
-	# load agents data file into array
-	my @data = &load_data();  # load agent data into array
+	my ($agent, $global) = @_;
+	unless ($global) {
+		# treat global pause differently
+		if (($agent =~ /\|/) && (param('time'))) { 
+			&global_pause($agent); 
+			exit;
+		}
+		if ($agent =~ /\|/) { &get_time($agent, 'global'); exit; }
+	}
 
+	# load agents data file into array
+	my @data = &load_data($agent);  # load agent data into array
+	
 	if ($data[7] != '000000000000') {
 		my $paused = convert_to_fulltime();
 		# agent already paused
-		print header;
-		print "<HEAD><TITLE>$agent paused</TITLE></HEAD>\n";
-		print '<BODY BGCOLOR="#000000" TEXT="#AAAADD">', "\n";
-		print '<CENTER>';
-		print "&nbsp;<BR>\n";
-		print "<FONT SIZE=2>";
+		unless ($global) {
+			print header;
+			print "<HEAD><TITLE>$agent paused</TITLE></HEAD>\n";
+			print '<BODY BGCOLOR="#000000" TEXT="#AAAADD">', "\n";
+			print '<CENTER>';
+			print "&nbsp;<BR>\n";
+			print "<FONT SIZE=2>";
+		}
+
 		print "$agent is already paused untill: $paused <BR>\n";
-		print "&nbsp;<BR>\n";
-		print "If this is not showing in the agent list, it will be<BR>\n";
-		print "updated the next time penemo is run.<BR>\n";
-		print "</FONT>\n";
-		print '</CENTER>';
-		print "</BODY>\n";
-		print end_html;
-		exit;
+
+		unless ($global) {
+			print "&nbsp;<BR>\n";
+			print "If this is not showing in the agent list, it will be<BR>\n";
+			print "updated the next time penemo is run.<BR>\n";
+			print "</FONT>\n";
+			print '</CENTER>';
+			print "</BODY>\n";
+			print end_html;
+			exit;
+		}
 	}
 	
 	# print html form to get time to pause agent for
@@ -68,7 +85,9 @@ sub pause {
 		$data[6] = '1';
 		$data[7] = $paused;
 	
-		&set_data(@data);  # write agent data with paused info
+		&set_data($agent, @data);  # write agent data with paused info
+
+		if ($global) { return($paused); }
 
 		print header;
 		print "<HEAD><TITLE>$agent paused</TITLE></HEAD>\n";
@@ -89,26 +108,41 @@ sub pause {
 
 # sub to unpause agent
 sub unpause {
-	# load agents data into array
-	my @data = &load_data();
+	my $agent = shift;
+	my @agents = ();
 
-	# this unpauses agent
-	$data[6] = '0';
-	$data[7] = '000000000000';
+	# treat global pause differently
+	if ($agent =~ /\|/) { 
+		$agent =~ s/\|$//;
+		$agent =~ s/^\|//;
+		@agents = split(/\|/, $agent);
+	}
+	else {
+		push @agents, $agent;
+	}
 
-	# write data back to file
-	&set_data(@data);
-
-	# update index.html to show agent unpaused.
-	#&update_html_unpause();
-
+	
 	print header;
 	print "<HEAD><TITLE>unpaused $agent</TITLE></HEAD>\n";
 	print '<BODY BGCOLOR="#000000" TEXT="#AAAADD">', "\n";
 	print '<CENTER>';
 	print "<FONT SIZE=2>";
 	print "&nbsp;<BR>\n";
-	print "$agent has been unpaused<BR>\n";
+
+	foreach $agent (@agents) {
+		# load agents data into array
+		my @data = &load_data($agent);
+
+		# this unpauses agent
+		$data[6] = '0';
+		$data[7] = '000000000000';
+
+		# write data back to file
+		&set_data($agent, @data);
+
+		print "$agent has been unpaused<BR>\n";
+	}
+
 	print "&nbsp;<BR>\n";
 	print "the html will be updated the next time penemo is run.<BR>\n";
 	print "</FONT>\n";
@@ -127,18 +161,30 @@ sub unpause {
 
 # prints html for to get time to pause agent for.
 sub get_time {
+	my ($agent, $global) = @_;
 	print header;
 	print "<HEAD><TITLE>pause $agent</TITLE></HEAD>\n";
 	print '<BODY BGCOLOR="#000000" TEXT="#AAAADD">', "\n";
 	print '<CENTER>';
 	print '&nbsp;<BR>', "\n";
-	print "<FONT SIZE=3><B>pausing agent: $agent</B></FONT><BR>\n";
+	unless ($global) {
+		print "<FONT SIZE=3><B>pausing agent: $agent</B></FONT><BR>\n";
+	}
 	print "<FONT SIZE=2>\n";
 	print '&nbsp;<BR>', "\n";
 	print 'current server time: ', "$date<BR>\n";
 	print "<FORM METHOD=\"Post\" action=\"/cgi-bin/penemo-admin.cgi\">\n";
-	print "<INPUT type=text name=\"agent\" value=\"$agent\" size=16><BR>\n";
-	print 'enter the number minutes you wish to pause this agent? (max: 60): <INPUT type=text name="time" size=2 maxlength=2><BR>', "\n";
+	if ($global) {
+		print "<B>global pause, all agents apply.</B>\n";
+	}
+	print "<INPUT type=text name=\"agent\" value=\"$agent\" size=16 maxsize=999><BR>\n";
+	print '&nbsp;<BR>', "\n";
+	print 'for how long would you like to pause this agent?<BR>';
+	print '<FONT COLOR=#44AAAA><B>format: DD:HH:MM (day:hr:min):</FONT></B> ';
+	print '<INPUT type=text name="time" size=8 maxlength=10><BR>', "\n";
+	print '&nbsp;<BR>', "\n";
+	print '(<FONT COLOR=#44AAAA><B>e.g.</B></FONT> <FONT COLOR=#DDDDFF>30 would be 30 min. 02:30 would be 2 hours and 30 min. 10:00:25 would be 10 days, 25 min.</FONT>)<BR>';
+	print '&nbsp;<BR>', "\n";
 	print "</FONT><FONT SIZE=2 COLOR=#000000>\n";
 	print '<INPUT TYPE=SUBMIT NAME=pause VALUE=pause><BR>', "\n";
 	print '</FORM><BR>', "\n";
@@ -151,9 +197,28 @@ sub get_time {
 # converts unix time to YYYYMoMoDDHHMiMi
 sub convert_to_fulltime {
 	my $time = param('time');
-	if ($time > '60') { $time = '60'; }
 	my ($year, $month, $day, $hour, $minutes) = split(/-/, $date_delimited);
-	my $calc = $minutes + $time;
+
+	# split up submitted time
+	$time =~ s/\s*//g;  # no whitespace
+
+	my ($s_day, $s_hour, $s_min) = (00, 00, 00);
+	if ($time !~ /\:/) {
+		$s_min = $time;	
+	}
+	elsif ($time !~ /\:.*?\:/) {
+		($s_hour, $s_min) = split(/\:/, $time, 2);  # get values from 'time'
+	}
+	elsif ($time =~ /\:.*?\:/) {
+		($s_day, $s_hour, $s_min) = split(/\:/, $time, 3);  # get values from 'time'
+	}
+	$s_day =~ s/\D*//g;   # only digits
+	$s_hour =~ s/\D*//g;  # only digits
+	$s_min =~ s/\D*//g;   # only digits
+	
+	if ($s_min > '60') { $s_min = '60'; }
+
+	my $calc = $minutes + $s_min;
 	if ($calc >= '60') {
 		$hour++;
 		if ($hour >= '24') {
@@ -165,6 +230,10 @@ sub convert_to_fulltime {
 	else {
 		$minutes = $calc;
 	}
+
+	if ($s_hour > '12') { $s_hour = '12'; }
+	$hour = $hour + $s_hour;
+	$day = $day + $s_day;
 
 	# if any are single digits add a before it
 	if ($minutes =~ /^\d{1}$/) {
@@ -211,6 +280,7 @@ sub convert_month {
 
 # load agents data 
 sub load_data {
+	my $agent = shift;
 	my $dir_data = $conf->get_dir_data();
 	open (DATA, "$dir_data/$agent") or die "Cant open $dir_data/$agent : $!\n";
 		my @data = <DATA>;
@@ -221,7 +291,7 @@ sub load_data {
 }
 
 sub set_data {
-	my (@data) = @_;
+	my ($agent, @data) = @_;
 	my $dir_data = $conf->get_dir_data();
 	open (DATA, ">$dir_data/$agent") or die "Cant open $dir_data/$agent : $!\n";
 		foreach my $delm (@data) {
@@ -229,5 +299,34 @@ sub set_data {
 		}
 		print DATA "\n";
 	close DATA;
+}
+
+
+sub global_pause {
+	my $agent = shift;
+	$agent =~ s/\|$//;
+	$agent =~ s/^\|//;
+	my @agents = split(/\|/, $agent);
+	my $paused = 0;
+
+	print header;
+	print "<HEAD><TITLE>global pause</TITLE></HEAD>\n";
+	print '<BODY BGCOLOR="#000000" TEXT="#AAAADD">', "\n";
+	print '<CENTER><FONT SIZE=2>';
+	print "&nbsp;<BR>\n";
+	print "all agents paused untill: ", $paused, "<BR>\n";
+	print "&nbsp;<BR>\n";
+	print "the html will be updated the next time penemo is run.<BR>\n";
+	print "agents paused: <BR>\n";
+
+	foreach $agent (@agents) {
+		print "$agent<BR>";
+		&pause($agent, 'global');	
+	}
+
+	print "</FONT>\n";
+	print '</CENTER>';
+	print end_html;
+	exit;
 }
 

@@ -176,13 +176,16 @@ sub _default_config
 		tier_promote	=> '3',
 		instance_name	=> 'default instance',
 		penemo_bin      => '/usr/local/sbin/penemo',
+		pause_box_index => '0',
+		pause_web       => '1',
+		pause_global    => '0',
 	);
 	open(CFG, "$conf_file")
 	            or penemo::core->notify_die("Can't open $conf_file : $!\n");
 
 	while (<CFG>) { 
 		next if ($_ =~ /^\s*#/); 
-		next if ($_ =~ /^$/); 
+		next if ($_ =~ /^\s*$/); 
 		chomp; 
 		if ($_ =~ /^notify_exec/) { 
 			($key, $value) = split(/_command\s*/, $_); 
@@ -194,7 +197,7 @@ sub _default_config
 			$conf{'instance_name'} = $value; 
 			next; 
 		} 
-		($key, $value) = split(' ', $_); 
+		($key, $value) = split(/\s+/, $_); 
 		$conf{$key} = $value; 
 	} 
 	close CFG;
@@ -233,6 +236,9 @@ sub _default_config
 			dir_cgibin	=> $conf{dir_cgibin},
 			dir_ucd_bin	=> $conf{dir_ucd_bin},
 			http_command    => $conf{http_command},
+			pause_web       => $conf{pause_web},
+			pause_box_index => $conf{pause_box_index},
+			pause_global    => $conf{pause_global},
 		},
 	);
    
@@ -367,6 +373,9 @@ sub get_penemo_bin              { $_[0]->{default}{penemo_bin} }
 sub get_dir_ucd_bin             { $_[0]->{default}{dir_ucd_bin} }
 sub get_http_command            { $_[0]->{default}{http_command} }
 sub get_instance_name		{ $_[0]->{default}{instance_name} }
+sub get_pause_web		{ $_[0]->{default}{pause_web} }
+sub get_pause_box_index		{ $_[0]->{default}{pause_box_index} }
+sub get_pause_global		{ $_[0]->{default}{pause_global} }
 
 sub _next_ip {
 	my @ip_list = split (/ /, $_[0]->{agent_list});
@@ -459,7 +468,7 @@ sub _plugin_mods {
 sub _plugin_conf {
 	my ($self, $ip) = @_;
 	if ($self->{$ip}{plugin_conf}->{filecheck_test}) {
-		#print "FUCK $ip: ", $self->{$ip}{plugin_conf}->{filecheck_test}, ".\n";
+		#print "BUG? $ip: ", $self->{$ip}{plugin_conf}->{filecheck_test}, ".\n";
 	}
 
 	return %{$self->{$ip}{plugin_conf}};
@@ -833,9 +842,36 @@ sub index_html_write {
 		print HTML "<FONT SIZE=2>penemo last run: <FONT COLOR=\"#AAAAAA\">$date</FONT></FONT><BR>\n"; 
 		print HTML "</CENTER>\n"; 
 
-		print HTML "<FORM method=\"Post\" action=\"/cgi-bin/penemo-admin.cgi\">\n";
+		print HTML "<FORM method=\"Post\" action=\"$cgi_bin/penemo-admin.cgi\">\n";
 		print HTML "<TABLE WITH=600 ALIGN=CENTER BORDER=0>\n";
 
+		if (($self->get_pause_global()) && ($self->get_pause_web())) {
+			my $iplist = '';
+			my $tog = 0;
+			foreach my $agent (@agentlist) {
+				my $ip = $agent->get_ip();
+				if ($agent->get_paused()) { $tog = 1; }
+				$iplist ||= ''; 
+				$iplist .= "$ip|";
+			}
+			
+			print HTML "<TR><TD WIDTH=600 ALIGN=CENTER COLSPAN=4>\n";
+			print HTML "&nbsp;<BR>\n";
+
+			print HTML "<FONT COLOR=#3366FF SIZE=2>";
+			print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=", $iplist, "&pause=1\">";
+			print HTML "<FONT COLOR=#4455FF SIZE=2>global pause</FONT></A>]</FONT>\n"; 
+
+			if ($tog) {
+				print HTML "<FONT COLOR=#3366FF SIZE=2>";
+				print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=", $iplist, "&unpause=1\">";
+				print HTML "<FONT COLOR=#4455FF SIZE=2>global unpause</FONT></A>]</FONT>\n"; 
+			}
+			print HTML "<BR>\n";
+
+			print HTML "</TD></TR>\n";
+		}
+			
 		foreach my $group (@grouplist) { 
 			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=4>\n";
 			print HTML "<BR><FONT SIZE=3><B>$group</B><BR>\n"; 
@@ -884,14 +920,14 @@ sub index_html_write {
 
 					print HTML "</TD>\n";
 					print HTML "<TD WIDTH=50 ALIGN=LEFT>\n";
-					if ($agent->get_paused()) {
+					if (($agent->get_paused()) && ($self->get_pause_web())) {
 						print HTML "<FONT COLOR=#AAAADD SIZE=1><I>untill: ",
 							$agent->get_paused_end(), "</I></FONT><BR>\n";
 						print HTML "<FONT COLOR=#3366FF SIZE=1>";
 						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&unpause=1\">";
 						print HTML "<FONT COLOR=#4455FF SIZE=1>unpause</FONT></A>]</FONT><BR>\n"; 
 					}
-					else {
+					elsif ($self->get_pause_web()) {
 						print HTML "<FONT COLOR=#3366FF SIZE=1>";
 						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&pause=1\">";
 						print HTML "<FONT COLOR=#4455FF SIZE=1>pause</FONT></A>]</FONT><BR>\n"; 

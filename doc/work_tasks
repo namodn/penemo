@@ -40,14 +40,14 @@
     config options instead of global options, update config html display
     accordingly
 
+[x] make a function for "quick list of checks(above)" to do colors for if
+    errors etc. and display for anywhere by calling the function to incorporate
+    on main page as well as config page, etc.
 
 ---
 [!] notify_exec (pain in the ass)
     (note: try notify_exec_name to group by, instead of actual notify_exec)
 
-[!] make a function for "quick list of checks(above)" to do colors for if
-    errors etc. and display for anywhere by calling the function to incorporate
-    on main page as well as config page, etc.
 
 [!] localize all config options, so there is no "global" conf file (penemo.conf)
     they all reside in one conf file (agent.conf format) with a DEFAULT_CONFIG
@@ -60,7 +60,7 @@
 
 
 ---
-[?] make http its own obj, or something, impliment multi-http checks.
+[?] implement multi-http checks.
 
 [?] it'd be nice to have some sort of informational page for agent history
       that shows downtimes, durations, other misc stuff.
