@@ -129,7 +129,7 @@ sub notify_die {
 
 package penemo::config;
 
-use lib "$ENV{PENEMO_MODS}";
+use lib '/usr/local/share/penemo/modules';
 use strict;
 use penemo;
 use penemo::agent;

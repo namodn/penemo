@@ -1,4 +1,4 @@
-#  modules/penemo/plugin.pm 
+#  modules/penemo/snmp.pm 
 #  Copyright (C) 2000 Nick Jennings
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -30,15 +30,15 @@
 #########################
 #########################
 #########################
-## plugin class
+## snmp class
 ##
 ####
 ####
 ####
 
-package penemo::agent::plugin;
+package penemo::agent::snmp;
 
-use lib '/usr/local/share/penemo/modules/';
+use lib "$ENV{PENEMO_MODS}";
 
 use strict;
 
@@ -47,11 +47,13 @@ sub new {
 	
 	my $ref = {
 		ip	    => $args{ip},
-		mod	    => $args{mod},
+		mib	    => $args{mib},
+		community   => $args{community},
 		message	    => '',
 		status	    => '',
 		html	    => '',
 		dir_plugin  => $args{dir_plugin},
+		dir_ucd_bin => $args{dir_ucd_bin},
 	};
 
 	bless $ref, $class;
@@ -61,69 +63,93 @@ sub new {
 # functions to retrieve values for internal methods.
 #
 sub _get_dir_plugin { $_[0]->{dir_plugin} }
-sub _get_mod { $_[0]->{mod} }
+sub _get_mib { $_[0]->{mib} }
+sub _get_dir_ucd_bin { $_[0]->{dir_ucd_bin} }
+sub _get_community { $_[0]->{community} }
 sub _get_ip { $_[0]->{ip} }
 
 
-sub exec {
+sub poll {
 	my $self = shift;
-	my $dir_plugin = $self->_get_dir_plugin() . "/check";
-	my $mod = $self->_get_mod();
+	my $dir_plugin = $self->_get_dir_plugin() . "/snmp";
+	my $mib = $self->_get_mib();
 	my $ip = $self->_get_ip();
+	my $community = $self->_get_community();
+	my $dir_ucd_bin = $self->_get_dir_ucd_bin();
+	my $snmpwalk = "$dir_ucd_bin/snmpwalk";
 	my @output = ();
 	
 
-	# die if file doesnt exist
-	unless (-f "$dir_plugin/$mod" . '.mod') {
+	unless (-f "$dir_plugin/$mib" . '.mib') {
 		$self->{status} = 0;
-		$self->{message} = "plugin: $dir_plugin/$mod.mod does not exist.\n";
+		$self->{message} = "plugin: $dir_plugin/$mib.mib does not exist.\n";
 		return;
 	}
 
-	# doesnt return proper results
-	if (`$dir_plugin/$mod.mod check`) {
+	if (`$dir_plugin/$mib.mib check`) {
 		$self->{status} = 0;
-		$self->{message} = "$dir_plugin/$mod.mod is not a valid penemo check module plugin.\n";
+		$self->{message} = "$dir_plugin/$mib.mib is not a valid penemo mib plugin. (failed check)\n";
 		return;
 	}
 
-	# execute check plugin module
-	@output = `$dir_plugin/$mod.mod exec $ip`;
+	@output = `$dir_plugin/$mib.mib $ip $community $snmpwalk`;
 
 	unless (@output) {
 		$self->{status} = 0;
-		$self->{message} = "execution of $dir_plugin/$mod.mod failed (nothing returned).\n";
+		$self->{message} = "execution of $dir_plugin/$mib.mib failed (nothing returned).\n";
 		return;
  	}
 
+	unless ($output[0] =~ '--agentdump') {
+		$self->{status} = 0;
+		$self->{message} = "@output";
+		return;
+	}
+	
+	my $test = '';
+	my @agentdump = ();
 	my @htmldump = ();
-	my $html = 0;
-	for (my $c = 0; $c <= $#output; $c++) {
-		if ($c == '0') {
-			if ($output[$c] =~ '0') {
-				$self->{status} = 0;
-				$c++;
-				$self->{message} = $output[$c];
-				next;
-			}
-			elsif ($output[$c] =~ '1') {
-				$self->{status} = 1;
-				next;
-			}
+	my @miberrors = ();
+	foreach my $line (@output) {
+		if ($line =~ '--agentdump') {
+			$test = '1';
+			next;
 		}
-
-		if ($output[$c] =~ '--htmldump') {
-			$html = '1';
+		elsif ($line =~ '--htmldump') {
+			$test = '2';
+			next;
+		}
+		elsif ($line =~ '--miberrors') {
+			$test = '3';
 			next;
 		}
 
-		if ($html == '1') {
-			push @htmldump, $output[$c];
-			next;
+		if ($test == '1') {
+			push @agentdump, $line; 	
+		}
+		elsif ($test == '2') {
+			push @htmldump, $line;
+		}
+		elsif ($test == '3') {
+			push @miberrors, $line;
 		}
 	}
-	$self->{html} = "@htmldump";
-	
+
+	unless ((@agentdump) && (@htmldump)) {
+		$self->{status} = 0;
+		$self->{message} = "internal error in snmp.pm (no information returned)\n";
+	}
+	elsif (@miberrors) {
+		$self->{status} = 0;
+		$self->{message} = "@miberrors";
+		$self->{walk} = "@agentdump";
+		$self->{html} = "@htmldump";
+	}
+	else {
+		$self->{status} = 1;
+		$self->{html} = "@htmldump";
+		$self->{walk} = "@agentdump";
+	}
 	return;
 }
 
@@ -137,6 +163,10 @@ sub message {
 
 sub html {
 	$_[0]->{html};
+}
+
+sub walk {
+	$_[0]->{walk};
 }
 
 1;

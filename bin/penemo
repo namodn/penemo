@@ -36,16 +36,14 @@ use IO::Handle;
 #unless ($< == 0) { die "must be run as root.\n"; } 
 
 # penemo specific modules
-use lib "$ENV{PENEMO_DEV_MODS}";
+use lib '/usr/local/share/penemo/modules/';
 
 use penemo;
 
 #system(`export PENEMO_MODS="/home/nick/devel/penemo-dev/modules/" &
 #	export PENEMO_CONF="/home/nick/devel/penemo-dev/conf/"');
 
-my $penemo_conf_file = "/home/nick/devel/penemo-dev/conf/penemo.conf";
-#my $penemo_conf_file = "$ENV{PENEMO_CONF}/penemo.conf";
-#my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
+my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
 my $agent_conf_file  = '/usr/local/etc/penemo/agent.conf';
 
 my $version = '1.0 devel';
