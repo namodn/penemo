@@ -72,16 +72,16 @@ sub html_image {
 	}
 
 	if ($name eq 'ok') { 
-		return ("<IMG SRC=\"$path/green_button.gif\" BORDER=0 ALT=\"green\">");
+		return ("<IMG SRC=\"$path/green_button.jpg\" BORDER=0 ALT=\"green\">");
 	} 
 	elsif ($name eq 'bad') { 
-		return ("<IMG SRC=\"$path/red_button.gif\" BORDER=0 ALT=\"red\">");
+		return ("<IMG SRC=\"$path/red_button.jpg\" BORDER=0 ALT=\"red\">");
 	} 
 	elsif ($name eq 'pause') { 
-		return ("<IMG SRC=\"$path/blue_button.gif\" BORDER=0 ALT=\"blue\">");
+		return ("<IMG SRC=\"$path/blue_button.jpg\" BORDER=0 ALT=\"blue\">");
 	} 
 	elsif ($name eq 'warn') {
-		return ("<IMG SRC=\"$path/yellow_button.gif\" BORDER=0 ALT=\"yellow\">");
+		return ("<IMG SRC=\"$path/yellow_button.jpg\" BORDER=0 ALT=\"yellow\">");
 	}
 	else {
 		return ("* "); 
