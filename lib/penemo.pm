@@ -794,6 +794,8 @@ sub write_persistent_data {
 	my ($self, $data_dir) = @_;
 	my $ip = $self->get_ip();
 
+	unless ($self->get_error_detected) { $self->set_current_tier('1'); }
+
 	my $ping_errlev = $self->get_ping_errlev();
 	my $http_errlev = $self->get_http_errlev();
 	my $snmp_errlev = $self->get_snmp_errlev();
