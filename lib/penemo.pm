@@ -580,136 +580,136 @@ sub get_next_agent {
 ##
 ##
 
-# organize notification objects by email to send, or exec
+## functions for creating notify class objects
+sub push_notification_stack {
+	my ($self, $objref) = ($_[0], $_[1]);
+	push @{ $self->{notification_stack} }, $objref;
+}
+
+sub _shift_notification_stack 	{ return shift @{ $_[0]->{notification_stack} }; }
+
+# organize notification objects by email or exec
 sub organize_notification_info {
 	my $self = shift;
 	my $agent = shift;
 
 	my $aid = $agent->get_aid();
-
 	my $method = '';
-	my $email = '';
-	my $exec = '';
+	my $delm = '';     # delimeter for organization (either email or number of exec) 
+	my $tier = '';
 
+	# arrange certain values from the agent's attributes 
+	# to a hash of stuff to make notify objects with
+	# sorted (delm) with the email address or exec name
 
 	unless ($agent->get_tier_support()) {
+		$tier = 0;
 		$method = $agent->get_notify_method_1();
 		if ($method eq 'email') {
-			$email = $agent->get_notify_email_1();
+			$delm = $agent->get_notify_email_1();
 		}
 		elsif ($method eq 'exec') {
-			$exec = $agent->get_notify_exec_1();
+			$delm = $agent->get_notify_exec_1();
 		}
 	}
 	else {
 		if ($agent->get_current_tier() == '1') {
+			$tier = 1;
 			$method = $agent->get_notify_method_1();
 			if ($method eq 'email') {
-				$email = $agent->get_notify_email_1();
+				$delm = $agent->get_notify_email_1();
 			}
 			elsif ($method eq 'exec') {
-				$exec = $agent->get_notify_exec_1();
+				$delm = $agent->get_notify_exec_1();
 			}
 		}
-		elsif ($agent->get_current_tier() == '2') {
+		if ($agent->get_current_tier() == '2') {
+			$tier = 2;
 			$method = $agent->get_notify_method_2();
 			if ($method eq 'email') {
-				$email = $agent->get_notify_email_2();
+				$delm = $agent->get_notify_email_2();
 			}
 			elsif ($method eq 'exec') {
-				$exec = $agent->get_notify_exec_2();
+				$delm = $agent->get_notify_exec_2();
 			}
 		}
-		elsif ($agent->get_current_tier() == '3') {
+		if ($agent->get_current_tier() == '3') {
+			$tier = 3;
 			$method = $agent->get_notify_method_3();
 			if ($method eq 'email') {
-				$email = $agent->get_notify_email_3();
+				$delm = $agent->get_notify_email_3();
 			}
 			elsif ($method eq 'exec') {
-				$exec = $agent->get_notify_exec_3();
+				$delm = $agent->get_notify_exec_3();
 			}
 		}
 	}
 
-	my $tier = $agent->get_current_tier();
 
-	# do a heirarchal organization for future notification proccessing
+	# ping
+	$self->{notification_org}{$delm}{$aid}{ping_check} = $agent->ping_check(); 
+	$self->{notification_org}{$delm}{$aid}{ping_status} = $agent->get_ping_status(); 
+	$self->{notification_org}{$delm}{$aid}{ping_msg} = $agent->get_ping_err_message(); 
 
-	$self->{notification_org}{$tier}{$aid}{ping_check} = 
-			$agent->ping_check(); 
-	$self->{notification_org}{$tier}{$aid}{http_check} = 
-			$agent->http_check();
-	$self->{notification_org}{$tier}{$aid}{snmp_check} = 
-			$agent->snmp_check();
-	$self->{notification_org}{$tier}{$aid}{plugin_check} = 
-			$agent->plugin_check();
-	$self->{notification_org}{$tier}{$aid}{ping_status} = 
-			$agent->get_ping_status(); 
-	$self->{notification_org}{$tier}{$aid}{http_status} = 
-			$agent->get_http_status(); 
-	$self->{notification_org}{$tier}{$aid}{http_get_status} = 
-			$agent->get_http_get_status(); 
-	$self->{notification_org}{$tier}{$aid}{http_search_status} = 
-			$agent->get_http_search_status(); 
+	# http
+	$self->{notification_org}{$delm}{$aid}{http_check} = $agent->http_check();
+	$self->{notification_org}{$delm}{$aid}{http_status} = $agent->get_http_status(); 
+	$self->{notification_org}{$delm}{$aid}{http_get_status} = $agent->get_http_get_status(); 
+	$self->{notification_org}{$delm}{$aid}{http_search_status} = $agent->get_http_search_status(); 
+	$self->{notification_org}{$delm}{$aid}{http_get_msg} = $agent->get_http_get_message();
+	$self->{notification_org}{$delm}{$aid}{http_search_msg} = $agent->get_http_search_message();
 	
+	# snmp	
+	$self->{notification_org}{$delm}{$aid}{snmp_check} = $agent->snmp_check();
 	if ($agent->get_snmp_mibs()) {
-		$self->{notification_org}{$tier}{$aid}{mib_list} =
-				$agent->get_snmp_mibs();
+		$self->{notification_org}{$delm}{$aid}{mib_list} = $agent->get_snmp_mibs();
 		my @mibs = split(/ /, $agent->get_snmp_mibs());
 		foreach my $mib (@mibs) {
-			$self->{notification_org}{$tier}{$aid}{snmp_status} = 
-					$agent->get_snmp_status($mib); 
-			$self->{notification_org}{$tier}{$aid}{snmp_msg} = 
-					$agent->get_snmp_message($mib);
+			$self->{notification_org}{$delm}{$aid}{snmp_status} = $agent->get_snmp_status($mib); 
+			$self->{notification_org}{$delm}{$aid}{snmp_msg} = $agent->get_snmp_message($mib);
 		}
 	}
 	else {
-		$self->{notification_org}{$tier}{$aid}{snmp_status} = ''; 
-		$self->{notification_org}{$tier}{$aid}{snmp_msg} = '';
+		$self->{notification_org}{$delm}{$aid}{snmp_status} = ''; 
+		$self->{notification_org}{$delm}{$aid}{snmp_msg} = '';
 	}
 
+	# plugin
+	$self->{notification_org}{$delm}{$aid}{plugin_check} = $agent->plugin_check();
 	if ($agent->get_plugin_mods()) {
-		$self->{notification_org}{$tier}{$aid}{mib_list} =
-				$agent->get_plugin_mods();
+		$self->{notification_org}{$delm}{$aid}{mib_list} = $agent->get_plugin_mods();
 		my @mods = split(/ /, $agent->get_plugin_mods());
 		foreach my $mod (@mods) {
-			$self->{notification_org}{$tier}{$aid}{plugin_status} = 
-					$agent->get_plugin_status($mod); 
-			$self->{notification_org}{$tier}{$aid}{plugin_msg} = 
-					$agent->get_plugin_message($mod);
+			$self->{notification_org}{$delm}{$aid}{plugin_status} = $agent->get_plugin_status($mod); 
+			$self->{notification_org}{$delm}{$aid}{plugin_msg} = $agent->get_plugin_message($mod);
 		}
 	}
 	else {
-		$self->{notification_org}{$tier}{$aid}{plugin_status} = ''; 
-		$self->{notification_org}{$tier}{$aid}{plugin_msg} = '';
+		$self->{notification_org}{$delm}{$aid}{plugin_status} = ''; 
+		$self->{notification_org}{$delm}{$aid}{plugin_msg} = '';
 	}
 	
-	
-	$self->{notification_org}{$tier}{$aid}{ping_msg} = 
-			$agent->get_ping_err_message(); 
-	$self->{notification_org}{$tier}{$aid}{http_get_msg} =
-			$agent->get_http_get_message();
-	$self->{notification_org}{$tier}{$aid}{http_search_msg} =
-			$agent->get_http_search_message();
+	# info
+	$self->{notification_org}{$delm}{$aid}{name} = $agent->get_name();
+	$self->{notification_org}{$delm}{$aid}{ip} = $agent->get_ip();
+	$self->{notification_org}{$delm}{$aid}{resolved} = $agent->get_error_resolved();
 
-	$self->{notification_org}{$tier}{$aid}{name} = $agent->get_name();
-	$self->{notification_org}{$tier}{$aid}{aid} = $agent->get_aid();
-	$self->{notification_org}{$tier}{$aid}{exec} = $exec;
-	$self->{notification_org}{$tier}{$aid}{email} = $email;
-	$self->{notification_org}{$tier}{$aid}{method} = $method;
-
-	# set for resolution, or error
-	$self->{notification_org}{$tier}{$aid}{resolved} = $agent->get_error_resolved();
+	# global setting for each notification message (object)
+	$self->{notification_org}{$delm}{tier} = $tier;
+	$self->{notification_org}{$delm}{func} = $delm;
+	$self->{notification_org}{$delm}{method} = $method;
 }
 
 sub get_notification_object_array {
 	my $self = shift;
+	# organize data to stack into an array.
+	#$self->_organize_notification_info();
 	my @new_objects = ();
-	foreach my $tier (keys %{ $self->{notification_org} }) {
+	foreach my $method (keys %{ $self->{notification_org} }) {
 		my $obj = penemo::notify->new( 
-					_tier => $tier,
-					%{ $self->{notification_org}{$tier} },
+					%{ $self->{notification_org}{$method} },
 		);
+
 		push @new_objects, $obj;
 	}
 
@@ -925,16 +925,15 @@ sub new {
 	return $self;
 }
 
-sub get_tier {
-	$_[0]->{_tier};
-}
-sub _get_agentlist {
-	my @agentlist = ();
-	foreach my $key (keys %{$_[0]}) {
-		next if ($key eq '_tier');
-		push @agentlist, $key;
+sub _get_aid_list {
+	my @aid_list = ();
+	foreach my $aid (keys %{$_[0]}) {
+		next if ($aid eq 'method');
+		next if ($aid eq 'func');
+		next if ($aid eq 'tier');
+		push @aid_list, $aid;
 	}
-	return (@agentlist);
+	return (@aid_list);
 }
 
 # the following type_check and type_msg methods require the IP 
@@ -942,8 +941,8 @@ sub _get_agentlist {
 
 # ping
 sub _get_ping_check {
-	my ($self, $agent) = @_;
-	return ($self->{$agent}{ping_check});	
+	my ($self, $aid) = @_;
+	return ($self->{$aid}{ping_check});	
 }
 sub _get_ping_status {
 	my ($self, $agent) = @_;
@@ -1008,42 +1007,45 @@ sub _get_plugin_msg {
 	return ($self->{$agent}{plugin_msg});	
 }
 
-# global per object
+# misc
 sub _get_name {
 	my ($self, $agent) = @_;
 	return ($self->{$agent}{name});
 }
-sub _get_aid {
-	my ($self, $agent) = @_;
-	return ($self->{$agent}{aid});
+sub _get_ip {
+	my ($self, $aid) = @_;
+	return ($self->{$aid}{ip});
 }
-
-
 sub _get_resolved { 
 	my ($self, $agent) = @_;
 	return ($self->{$agent}{resolved});
 }
-sub _get_method {
-	my ($self) = @_;
-	return ($self->{method});
-}
 
+# global per object
+sub _get_tier {
+	$_[0]->{tier};
+}
+sub get_method {
+	$_[0]->{method};
+}
+sub get_func {
+	$_[0]->{func};
+}
 
 
 sub email {
 	my ($self, $instance, $version) = @_;
-	my @agentlist = $self->_get_agentlist();
+	my @aid_list = $self->_get_aid_list();
 	my @msg = ();
 
-	foreach my $agent (@agentlist) {
-		my $aid = $self->_get_aid($agent);
-		my $name = $self->_get_name($agent);
+	foreach my $aid (@aid_list) {
+		my $name = $self->_get_name($aid);
 		push @msg, "$aid : $name\n";
-		if ($self->_get_resolved($agent)) {
+		if ($self->_get_resolved($aid)) {
 			push @msg, "  all errors resolved.\n";
 		}
 		else {
-			my @tmp = $self->_get_message($agent);
+			my @tmp = $self->_get_message($aid);
 			foreach my $line (@tmp) {
 				push @msg, $line;
 			}
@@ -1065,7 +1067,7 @@ sub email {
 			print MAIL "$line\n"; 
 		}
 		print MAIL "\n"; 
-		print MAIL "tier level: ", $self->_get_current_tier(), "\n";
+		print MAIL "tier level: ", $self->_get_tier(), "\n";
 		print MAIL "tier email: $to\n";
 	close MAIL; 
 
@@ -1080,10 +1082,78 @@ sub email {
 
 }
 
-sub execute {
-	print "execute method not implemented.\n";
-}
+sub exec {
+	my ($self, $instance, $version, $dir_exec) = @_;
+	my @aid_list = $self->_get_aid_list();
+	my @msg = ();
 
+	foreach my $aid (@aid_list) {
+		my $name = $self->_get_name($aid);
+		push @msg, "$aid : $name\n";
+		if ($self->_get_resolved($aid)) {
+			push @msg, "  all errors resolved.\n";
+		}
+		else {
+			my @tmp = $self->_get_message($aid);
+			foreach my $line (@tmp) {
+				push @msg, $line;
+			}
+		}
+	}
+	my $to = $self->get_method();
+		
+	chomp @msg;
+	@tmp = ();  
+	foreach my $line (@msg) {
+		shift @tmp, "$line\n";
+	}
+	@msg = @tmp;
+	
+	# print to console 
+	#
+	print "--\n"; 
+	foreach my $line (@msg) {
+		print $line; 
+	}
+
+	if ($self->_get_tier()) {
+		print "\n";
+		print "tier level: ", $self->_get_tier(), "\n";
+		print "tier email: $to\n";
+	}
+	else {
+		print "\n";
+		print "email: $to\n";
+	}
+	print "--\n";
+
+
+	# compose message for execution 
+	#
+	unshift @msg, "  penemo $version\n"; 
+	unshift @msg, "\n"; 
+	if ($self->_get_tier()) {
+		shift @msg,"\n"; 
+		shift @msg, "tier level: ", $self->_get_tier(), "\n";
+		shift @msg, "tier email: $to\n";
+	}
+	else {
+		shift @msg, "\n"; 
+		shift @msg, "email: $to\n";
+	}
+
+	
+	# send msg as a command line parameter
+	#
+	if (-f $dir_exec/$func) {
+		system("/$dir_exec/$func @msg");
+	}
+	else {
+		penemo::core->notify_die("Can't execute notification exec $func: file does not exist in /$dir_exec/$func\n";
+	}
+
+
+}
 
 sub _get_message {
 	my ($self, $agent) = @_;
