@@ -44,11 +44,12 @@
     errors etc. and display for anywhere by calling the function to incorporate
     on main page as well as config page, etc.
 
+[x] change to AID from IP (just a unique word i.e. SECURE2)
+
+[x] add ping $ip  so the pings arent agent ip specific
+
 ---
 
-[!] change UID from IP to real UID (just a unique word i.e. SECURE2)
-
-[!] add ping $ip  so the pings arent agent ip specific
 
 [!] localize all config options, so there is no "global" conf file (penemo.conf)
     they all reside in one conf file (agent.conf format) with a DEFAULT_CONFIG

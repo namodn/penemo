@@ -64,12 +64,16 @@ sub poll {
 	my $dir_ucd_bin = $self->_get_dir_ucd_bin();
 	my $snmpwalk = "$dir_ucd_bin/snmpwalk";
 	my %snmp;
+	my $ok_light = penemo::core->html_image('agent', 'ok');
+	my $bad_light = penemo::core->html_image('agent', 'bad');
 
 	my @walk = `$snmpwalk $ip $community ucd`;
 
 	if ($#walk <= '1') { 
 		$self->{status} = '0';
-		$self->{messages} = "agent didn't respond to poll.\n"; 
+		$self->{message} = "agent didn't respond to poll.\n"; 
+		$self->{walk} = "agent didn't respond to poll.\n"; 
+		$self->{html} = "$bad_light <FONT COLOR=\"#AA22AA\" agent didn't respond to poll.\n"; 
 		return; 
 	}
 	else {
@@ -84,8 +88,6 @@ sub poll {
 
 	my @miberrors = ();      # stack of errors in snmp mib
 	my @html = ();	         # html output
-	my $ok_light = penemo::core->html_image('agent', 'ok');
-	my $bad_light = penemo::core->html_image('agent', 'bad');
 	# print html data
 
 	#

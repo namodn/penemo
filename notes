@@ -1,0 +1,22 @@
+notification.
+
+   hmm...
+  ______   ____===+++
+ /  \  /      ---==**** ++
+|___/ /-----\  --==**++ ++
+ \_________  \ 
+           ^\ \
+           _|  \________
+          |             \
+          |   trouble!  |
+          \_____________/
+
+
+
+   
+   transfer object properties from agent to notify class .... inheritance maybe!?
+   hmm...
+
+   so then the notify class can query the agent's data and organize the data
+   into groups for batch notification.
+   

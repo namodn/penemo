@@ -589,12 +589,12 @@ sub push_notification_stack {
 sub _shift_notification_stack 	{ return shift @{ $_[0]->{notification_stack} }; }
 
 # organize notification objects by email to send, or exec
-sub organize_notification_info {
+sub _organize_notification_info {
 	my $self = shift;
 
 	while () {
 		last unless ( my $agent = $self->_shift_notification_stack() );
-		my $ip = $agent->get_aid();
+		my $aid = $agent->get_aid();
 
 		my $method = '';
 		my $email = '';
@@ -651,140 +651,146 @@ sub organize_notification_info {
 		# do a different heirarchal organization depending on if the
 		# notification method is exec or email.
 		unless ($method eq 'exec') {
-			$self->{notification_org}{$email}{$ip}{ping_check} = 
+			$self->{notification_org}{$email}{$aid}{ping_check} = 
 					$agent->ping_check(); 
-			$self->{notification_org}{$email}{$ip}{http_check} = 
+			$self->{notification_org}{$email}{$aid}{http_check} = 
 					$agent->http_check();
-			$self->{notification_org}{$email}{$ip}{snmp_check} = 
+			$self->{notification_org}{$email}{$aid}{snmp_check} = 
 					$agent->snmp_check();
-			$self->{notification_org}{$email}{$ip}{plugin_check} = 
+			$self->{notification_org}{$email}{$aid}{plugin_check} = 
 					$agent->plugin_check();
-			$self->{notification_org}{$email}{$ip}{ping_status} = 
+			$self->{notification_org}{$email}{$aid}{ping_status} = 
 					$agent->get_ping_status(); 
-			$self->{notification_org}{$email}{$ip}{http_status} = 
+			$self->{notification_org}{$email}{$aid}{http_status} = 
 					$agent->get_http_status(); 
-			$self->{notification_org}{$email}{$ip}{http_get_status} = 
+			$self->{notification_org}{$email}{$aid}{http_get_status} = 
 					$agent->get_http_get_status(); 
-			$self->{notification_org}{$email}{$ip}{http_search_status} = 
+			$self->{notification_org}{$email}{$aid}{http_search_status} = 
 					$agent->get_http_search_status(); 
 			
 			if ($agent->get_snmp_mibs()) {
-				$self->{notification_org}{$email}{$ip}{mib_list} =
+				$self->{notification_org}{$email}{$aid}{mib_list} =
 						$agent->get_snmp_mibs();
 				my @mibs = split(/ /, $agent->get_snmp_mibs());
 				foreach my $mib (@mibs) {
-					$self->{notification_org}{$email}{$ip}{snmp_status} = 
+					$self->{notification_org}{$email}{$aid}{snmp_status} = 
 							$agent->get_snmp_status($mib); 
-					$self->{notification_org}{$email}{$ip}{snmp_msg} = 
+					$self->{notification_org}{$email}{$aid}{snmp_msg} = 
 							$agent->get_snmp_message($mib);
 				}
 			}
 			else {
-				$self->{notification_org}{$email}{$ip}{snmp_status} = ''; 
-				$self->{notification_org}{$email}{$ip}{snmp_msg} = '';
+				$self->{notification_org}{$email}{$aid}{snmp_status} = ''; 
+				$self->{notification_org}{$email}{$aid}{snmp_msg} = '';
 			}
 
 			if ($agent->get_plugin_mods()) {
-				$self->{notification_org}{$email}{$ip}{mib_list} =
+				$self->{notification_org}{$email}{$aid}{mib_list} =
 						$agent->get_plugin_mods();
 				my @mods = split(/ /, $agent->get_plugin_mods());
 				foreach my $mod (@mods) {
-					$self->{notification_org}{$email}{$ip}{plugin_status} = 
+					$self->{notification_org}{$email}{$aid}{plugin_status} = 
 							$agent->get_plugin_status($mod); 
-					$self->{notification_org}{$email}{$ip}{plugin_msg} = 
+					$self->{notification_org}{$email}{$aid}{plugin_msg} = 
 							$agent->get_plugin_message($mod);
 				}
 			}
 			else {
-				$self->{notification_org}{$email}{$ip}{plugin_status} = ''; 
-				$self->{notification_org}{$email}{$ip}{plugin_msg} = '';
+				$self->{notification_org}{$email}{$aid}{plugin_status} = ''; 
+				$self->{notification_org}{$email}{$aid}{plugin_msg} = '';
 			}
 			
 			
-			$self->{notification_org}{$email}{$ip}{ping_msg} = 
+			$self->{notification_org}{$email}{$aid}{ping_msg} = 
 					$agent->get_ping_err_message(); 
-			$self->{notification_org}{$email}{$ip}{http_get_msg} =
+			$self->{notification_org}{$email}{$aid}{http_get_msg} =
 					$agent->get_http_get_message();
-			$self->{notification_org}{$email}{$ip}{http_search_msg} =
+			$self->{notification_org}{$email}{$aid}{http_search_msg} =
 					$agent->get_http_search_message();
-			$self->{notification_org}{$email}{$ip}{name} = $agent->get_name();
-			$self->{notification_org}{$email}{$ip}{aid} = $agent->get_aid();
+			$self->{notification_org}{$email}{$aid}{name} = $agent->get_name();
+			$self->{notification_org}{$email}{$aid}{aid} = $agent->get_aid();
 
 			# global setting for each notification message (object)
 			$self->{notification_org}{$email}{current_tier} = $agent->get_current_tier();
+		
+
+			#
+			#$self->{notification_org}{notify}{$aid}{exec} = $exec;
+			#$self->{notification_org}{notify}{$aid}{email} = $email;
+			#$self->{notification_org}{notify}{$aid}{method} = $method;
+			#
 		}
 		else {
-			$self->{notification_org}{notify}{$ip}{exec} = $exec;
-			$self->{notification_org}{notify}{$ip}{ping_check} = 
+			$self->{notification_org}{notify}{$aid}{ping_check} = 
 					$agent->ping_check(); 
-			$self->{notification_org}{notify}{$ip}{http_check} = 
+			$self->{notification_org}{notify}{$aid}{http_check} = 
 					$agent->http_check();
-			$self->{notification_org}{notify}{$ip}{snmp_check} = 
+			$self->{notification_org}{notify}{$aid}{snmp_check} = 
 					$agent->snmp_check();
-			$self->{notification_org}{notify}{$ip}{plugin_check} = 
+			$self->{notification_org}{notify}{$aid}{plugin_check} = 
 					$agent->plugin_check();
-			$self->{notification_org}{notify}{$ip}{ping_status} = 
+			$self->{notification_org}{notify}{$aid}{ping_status} = 
 					$agent->get_ping_status(); 
-			$self->{notification_org}{notify}{$ip}{http_status} = 
+			$self->{notification_org}{notify}{$aid}{http_status} = 
 					$agent->get_http_status(); 
-			$self->{notification_org}{notify}{$ip}{http_get_status} = 
+			$self->{notification_org}{notify}{$aid}{http_get_status} = 
 					$agent->get_http_get_status(); 
-			$self->{notification_org}{notify}{$ip}{http_search_status} = 
+			$self->{notification_org}{notify}{$aid}{http_search_status} = 
 					$agent->get_http_search_status(); 
 			
 			if ($agent->get_snmp_mibs()) {
-				$self->{notification_org}{notify}{$ip}{mib_list} =
+				$self->{notification_org}{notify}{$aid}{mib_list} =
 						$agent->get_snmp_mibs();
 				my @mibs = split(/ /, $agent->get_snmp_mibs());
 				foreach my $mib (@mibs) {
-					$self->{notification_org}{notify}{$ip}{snmp_status} = 
+					$self->{notification_org}{notify}{$aid}{snmp_status} = 
 							$agent->get_snmp_status($mib); 
-					$self->{notification_org}{notify}{$ip}{snmp_msg} = 
+					$self->{notification_org}{notify}{$aid}{snmp_msg} = 
 							$agent->get_snmp_message($mib);
 				}
 			}
 			else {
-				$self->{notification_org}{notify}{$ip}{snmp_status} = ''; 
-				$self->{notification_org}{notify}{$ip}{snmp_msg} = '';
+				$self->{notification_org}{notify}{$aid}{snmp_status} = ''; 
+				$self->{notification_org}{notify}{$aid}{snmp_msg} = '';
 			}
 
 			if ($agent->get_plugin_mods()) {
-				$self->{notification_org}{notify}{$ip}{mib_list} =
+				$self->{notification_org}{notify}{$aid}{mib_list} =
 						$agent->get_plugin_mods();
 				my @mods = split(/ /, $agent->get_plugin_mods());
 				foreach my $mod (@mods) {
-					$self->{notification_org}{notify}{$ip}{plugin_status} = 
+					$self->{notification_org}{notify}{$aid}{plugin_status} = 
 							$agent->get_plugin_status($mod); 
-					$self->{notification_org}{notify}{$ip}{plugin_msg} = 
+					$self->{notification_org}{notify}{$aid}{plugin_msg} = 
 							$agent->get_plugin_message($mod);
 				}
 			}
 			else {
-				$self->{notification_org}{notify}{$ip}{plugin_status} = ''; 
-				$self->{notification_org}{notify}{$ip}{plugin_msg} = '';
+				$self->{notification_org}{notify}{$aid}{plugin_status} = ''; 
+				$self->{notification_org}{notify}{$aid}{plugin_msg} = '';
 			}
 			
 			
-			$self->{notification_org}{notify}{$ip}{ping_msg} = 
+			$self->{notification_org}{notify}{$aid}{ping_msg} = 
 					[@{$agent->get_ping_message()}]; 
-			$self->{notification_org}{notify}{$ip}{http_get_msg} =
+			$self->{notification_org}{notify}{$aid}{http_get_msg} =
 					$agent->get_http_get_message();
-			$self->{notification_org}{notify}{$ip}{http_search_msg} =
+			$self->{notification_org}{notify}{$aid}{http_search_msg} =
 					$agent->get_http_search_message();
-			$self->{notification_org}{notify}{$ip}{name} = $agent->get_name();
+			$self->{notification_org}{notify}{$aid}{name} = $agent->get_name();
 
 			# global setting for each notification message (object)
 			$self->{notification_org}{notify}{current_tier} = $agent->get_current_tier();
 		}
 
 		if ($agent->get_error_resolved()) {
-			print "$ip, resolved problem\n";
-			$self->{notification_org}{$email}{$ip}{resolved} = '1';
+			print "$aid, resolved problem\n";
+			$self->{notification_org}{$email}{$aid}{resolved} = '1';
 			$agent->set_notifications_sent('0');
 			$agent->set_current_tier('1');
 		}
 		else {
-			$self->{notification_org}{$email}{$ip}{resolved} = '0';
+			$self->{notification_org}{$email}{$aid}{resolved} = '0';
 			$agent->set_have_notifications_been_sent('1');
 			$agent->set_notifications_sent('+');
 		}
@@ -795,6 +801,8 @@ sub organize_notification_info {
 
 sub get_notification_object_array {
 	my $self = shift;
+	# organize data to stack into an array.
+	$self->_organize_notification_info();
 	my @new_objects = ();
 	foreach my $method (keys %{ $self->{notification_org} }) {
 		my $obj = penemo::notify->new( 
@@ -871,7 +879,7 @@ sub index_html_write {
 			foreach my $agent (@agentlist) {
 				my $aid = $agent->get_aid();
 				if ($agent->get_paused()) { $tog = 1; }
-				$agentlist ||= ''; 
+				$agentlist ||= '';     
 				$agentlist .= "$aid|";
 			}
 			

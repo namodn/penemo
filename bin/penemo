@@ -161,11 +161,17 @@ foreach my $agent (@agents) {
 		# no errors detected, reset all tracking data. 
 		$agent->set_notifications_sent('0');
 	}
+
 	# write agent html
 	print "  $aid: writing agents html file.\n";
 	$agent->write_agent_html( $conf->get_dir_html() );
+
 	# add to list of agents for index html
 	$conf->push_html_agentlist($agent);
+
+	# write current errorlevels and misc agent data to file
+	#$agent->write_persistent_data($conf->get_dir_data());
+	# -- not here because values might change still
 }
 
 # print total agents loaded
@@ -180,16 +186,13 @@ $conf->index_html_write($version, $date);
 ##
 print "notification proccess.\n";
 
-# get data sorted for the get_notification_object_array
-$conf->organize_notification_info();
 # get list of notification objects
 my @notification_objects = $conf->get_notification_object_array();
 
 # save current error levels to file for next time
-# done here because get_notification_objects_array modifies errlevs
+# -- done here because get_notification_objects_array modifies errlevs --
 foreach my $agent (@agents) {
 	# write current errorlevels and misc agent data to file
-	#print "  ", $agent->get_aid(), ": writing agent data.\n";
 	$agent->write_persistent_data($conf->get_dir_data());
 }
 
@@ -300,9 +303,6 @@ sub snmp_check {
 		}
 		else { 
 			print "\n";
-			if ($agent->get_snmp_errlev()) {
-				#$agent->set_error_resolved('1');
-			}
 			$agent->set_snmp_errlev('0'); 
 		} 
 	}
