@@ -534,10 +534,8 @@ sub organize_notification_info {
 			elsif ($method eq 'exec') {
 				$exec = $agent->get_notify_exec_1();
 			}
-			$agent->set_notifications_sent('+');
 		}
 		else {
-			$agent->set_notifications_sent('+');
 			if ($agent->get_notifications_sent() >= $self->get_tier_promote()) {
 				unless ($agent->get_current_tier() == '3') {
 					$agent->set_current_tier('+') unless ($agent->get_error_resolved());
@@ -584,6 +582,7 @@ sub organize_notification_info {
 		else {
 			$self->{notification_org}{$email}{$ip}{resolved} = '0';
 			$agent->set_have_notifications_been_sent('1');
+			$agent->set_notifications_sent('+');
 		}
 
 		
