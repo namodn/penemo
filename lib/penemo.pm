@@ -799,9 +799,9 @@ sub index_html_write {
 		print HTML "LINK=\"#AAAAAA\" VLINK=\"#AAAAAA\">\n"; 
 		print HTML "<CENTER>\n"; 
 		print HTML "\t<FONT SIZE=3><B><FONT COLOR=\"#CC11AA\">penemo</FONT> "; 
-		print HTML "version $version</B></FONT>\n"; 
-		print HTML "<HR WIDTH=60%>\n"; 
-		print HTML "penemo last run: <FONT COLOR=\"#AAAAAA\">$date</FONT><BR>\n"; 
+		print HTML "version $version</B></FONT><BR>\n"; 
+		#print HTML "<HR WIDTH=60%>\n"; 
+		print HTML "<FONT SIZE=2>penemo last run: <FONT COLOR=\"#AAAAAA\">$date</FONT></FONT><BR>\n"; 
 		print HTML "</CENTER>\n"; 
 
 		print HTML "<FORM method=\"Post\" action=\"/cgi-bin/penemo-admin.cgi\">\n";
@@ -809,7 +809,7 @@ sub index_html_write {
 
 		foreach my $group (@grouplist) { 
 			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=4>\n";
-			print HTML "<FONT SIZE=4><B>$group</B><BR>\n"; 
+			print HTML "<BR><FONT SIZE=3><B>$group</B><BR>\n"; 
 			print HTML "</TD></TR>\n";
 			foreach my $agent (@agentlist) { 
 				my $ip = $agent->get_ip();
@@ -830,15 +830,17 @@ sub index_html_write {
 					else { 
 						print HTML "$ok_light  ";
 					} 
+					print HTML "<FONT SIZE=2>\n";
 					print HTML "<A HREF=\"agents/$ip/index.html\">$ip</A><BR>\n";
+					print HTML "</FONT>\n";
 					print HTML "</TD>\n";
 					print HTML "<TD WIDTH=200 ALIGN=LEFT>\n";
-					print HTML "<FONT COLOR=#CCDDA><B>\n";
+					print HTML "<FONT SIZE=2 COLOR=#CCDDA><B>\n";
 					print HTML $agent->get_name();
-					print HTML "</B></FONT>\n"; 
+					print HTML "</B></FONT></FONT>\n"; 
 					print HTML "</TD>\n";
 					print HTML "<TD WIDTH=200 ALIGN=LEFT>\n";
-					print HTML "<FONT SIZE=2 COLOR=#AAAADD><I>";
+					print HTML "<FONT SIZE=1 COLOR=#AAAADD>";
 					if ($agent->ping_check()) { print HTML " ping"; }
 					if ($agent->http_check()) { print HTML ", http"; }
 					if ($agent->snmp_check()) { 
@@ -846,10 +848,10 @@ sub index_html_write {
 						print HTML $agent->get_snmp_mibs();
 					}
 					if ($agent->plugin_check()) { 
-						print HTML ", plugin "; 
+						print HTML ", plugin: "; 
 						print HTML $agent->get_plugin_mods();
 					}
-					print HTML "</I></FONT><BR>\n";
+					print HTML "</FONT><BR>\n";
 
 					print HTML "</TD>\n";
 					print HTML "<TD WIDTH=50 ALIGN=LEFT>\n";
@@ -866,9 +868,9 @@ sub index_html_write {
 					print HTML "</TD></TR>\n";
 				} 
 			} 
-			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=4>\n";
-			print HTML "&nbsp;<BR>\n"; 
-			print HTML "</TD></TR>\n";
+			#print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=4>\n";
+			#print HTML "&nbsp;<BR>\n"; 
+			#print HTML "</TD></TR>\n";
 		} 
 
 		print HTML "</TABLE>\n";
@@ -1371,7 +1373,7 @@ sub http {
       $check = system("snarf -q -n http://$url $cache/search.html");
    }
    elsif ($command eq 'fetch') {
-      $check = system("fetch -q -o $cache/search.html http://$url");
+      $check = system("fetch -T 5 -q -o $cache/search.html http://$url");
    }
    elsif ($command eq 'wget') {
       $check = system("wget -q -t 1 -T 20 -O $cache/search.html http://$url");
@@ -1380,7 +1382,7 @@ sub http {
    if ($check != 0) {
       $self->_set_http_status("0");
       $self->_set_http_get_status("0");
-      $self->_set_http_get_message("failed with http request, url: $url");
+      $self->_set_http_get_message("failed url: $url");
       $self->set_http_errlev('+');
       return;
    }
@@ -1402,7 +1404,7 @@ sub http {
    my $string = $self->get_http_search();
 
    open(SEARCH, "$cache/search.html")
-        or penemo::core->notify_die("Couldnt open $cache/search.html : $!\n");
+        or penemo::core->notify_die("Cant open $cache/search.html : $!\n");
    my $return = '0';
    while (<SEARCH>) {
       if ($_ =~ /$string/) {
@@ -1598,7 +1600,6 @@ sub write_agent_html
 	else {
 		# exec
 	}
-	print CONF "&nbsp;<BR>\n";
 	print CONF "<B>Tier 2</B><BR>";
 	print CONF "&nbsp &nbsp <I>notify method</I>: <FONT COLOR=#6666AA>", $self->get_notify_method_2(), "</FONT>";
 	if ($self->get_notify_method_1() eq 'email') {
@@ -1607,7 +1608,6 @@ sub write_agent_html
 	else {
 		# exec
 	}
-	print CONF "&nbsp;<BR>\n";
 	print CONF "<B>Tier 3</B><BR>";
 	print CONF "&nbsp &nbsp <I>notify method</I>: <FONT COLOR=#6666AA>", $self->get_notify_method_3(), "</FONT>";
 	if ($self->get_notify_method_1() eq 'email') {
@@ -1947,22 +1947,26 @@ sub email {
 	}
 	my $to = $self->get_method();
 		
+	chomp @msg;
+	
         open(MAIL, "| /usr/sbin/sendmail -t -oi") 
 			or penemo::core->notify_die("Can't send notification email : $!\n"); 
 		print MAIL "To: $to\n"; 
 		print MAIL "From: penemo_notify\n";
 		print MAIL "Subject: $instance\n"; 
-		print MAIL "tier level: ", $self->_get_current_tier(), "\n";
-		print MAIL "tier email: $to\n";
-		print MAIL "  messages during execution, penemo $version\n"; 
+		print MAIL "\n"; 
+		print MAIL "  penemo $version\n"; 
 		print MAIL "\n"; 
 		print MAIL @msg; 
 		print MAIL "\n"; 
+		print MAIL "tier level: ", $self->_get_current_tier(), "\n";
+		print MAIL "tier email: $to\n";
 	close MAIL; 
 
+	print "--\n", @msg; 
 	print "tier level: ", $self->_get_current_tier(), "\n";
 	print "tier email: $to\n";
-	print @msg; 
+	print "--\n";
 
 }
 

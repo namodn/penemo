@@ -6,20 +6,14 @@ use CGI::Carp;
 
 
 use lib '/usr/local/share/penemo/modules/';
-#use lib '/home/nick/devel/penemo/modules/';
 
 use penemo;
 
 my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
-#my $penemo_conf_file = '/home/nick/devel/penemo/conf/penemo.conf';
 
 my $agent_conf_file = '/usr/local/etc/penemo/agent.conf';
-#my $agent_conf_file = '/home/nick/devel/penemo/conf/agent.conf';
 
 my $conf = penemo::config->load_config($penemo_conf_file, $agent_conf_file);
-
-#my $conf_dir = '/usr/local/etc/penemo/';
-#my $conf_dir = '/home/nick/devel/penemo/conf/';
 
 unless (param('agent')) {
 	die "no agent specified\n";
@@ -199,8 +193,8 @@ sub convert_month {
 
 # load agents data 
 sub load_data {
-	my $data_dir = $conf->get_data_dir();
-	open (DATA, "$data_dir/$agent") or die "Cant open $data_dir/$agent : $!\n";
+	my $dir_data = $conf->get_dir_data();
+	open (DATA, "$dir_data/$agent") or die "Cant open $dir_data/$agent : $!\n";
 		my @data = <DATA>;
 	close DATA;
 
@@ -210,8 +204,8 @@ sub load_data {
 
 sub set_data {
 	my (@data) = @_;
-	my $data_dir = $conf->get_data_dir();
-	open (DATA, ">$data_dir/$agent") or die "Cant open $data_dir/$agent : $!\n";
+	my $dir_data = $conf->get_dir_data();
+	open (DATA, ">$dir_data/$agent") or die "Cant open $dir_data/$agent : $!\n";
 		foreach my $delm (@data) {
 			print DATA "$delm\t";
 		}
@@ -222,14 +216,14 @@ sub set_data {
 
 #sub update_html_pause {
 #	my $time = shift;
-#	my $html_dir = $conf->get_html_dir();
+#	my $dir_html = $conf->get_dir_html();
 #	my @html = ();
 #
-#	open (HTML, "$html_dir/index.html") or die "Cant open $html_dir/index.html : $!\n";
+#	open (HTML, "$dir_html/index.html") or die "Cant open $dir_html/index.html : $!\n";
 #		@html = <HTML>;
 #	close HTML;
 #
-#	open (HTML, ">$html_dir/index.html") or die "Cant open $html_dir/index.html : $!\n";
+#	open (HTML, ">$dir_html/index.html") or die "Cant open $dir_html/index.html : $!\n";
 #	foreach my $line (@html) {
 #		if ($line =~ /\<A HREF=\"agents\/$agent\/index.html\"\>/) {
 #			$line =~ s/green/blue/;	

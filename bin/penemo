@@ -201,7 +201,7 @@ foreach my $notify (@notification_objects) {
 		next;
 	}
 	
-	print "\nnotification msg sent to: ", $notify->get_method(), "\n";
+	print "notification msg sent to: ", $notify->get_method(), "\n";
 	$notify->email($conf->get_instance_name(), $version);
 }
 
