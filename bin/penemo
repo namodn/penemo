@@ -35,7 +35,8 @@ use IO::Handle;
 #unless ($< == 0) {} 
 
 # penemo specific modules
-use lib '/usr/local/share/penemo/modules/';
+use lib '/home/nick/devel/penemo/modules/';
+#use lib '/usr/local/share/penemo/modules/';
 
 use penemo;
 
@@ -75,6 +76,7 @@ foreach my $agent (@agents) {
 	$agent->load_persistent_data($conf->get_data_dir());
 
 	print "\t\tnotify_level: ", $agent->get_notify_level(),
+		", notify_cap: ", $agent->get_notify_cap(),
 		", errlev_reset: ", $agent->get_errlev_reset(), "\n";
 
 	if ($agent->get_paused()) {
@@ -103,39 +105,46 @@ foreach my $agent (@agents) {
 	&plugin_check($agent);
 
 	if ($agent->get_error_detected()) { 
-		my $stack = 0;   # true if agent is to be stacked.
-		if ($agent->ping_check()) {
-			if ($agent->get_ping_errlev() >= $agent->get_notify_level()) {
-				$stack = 1;
-			}
+		# an error has been detected
+		if ( ($agent->get_notify_cap()) && 
+				($agent->get_notify_cap() <= $agent->get_notifications_sent()) ) {
+			# don't set stack bit
+			print "  $ip: notification cap reached, no notify sent.\n";
 		}
-		if ($agent->http_check()) {
-			if ($agent->get_http_errlev() >= $agent->get_notify_level()) {
-				$stack = 1;
+		else {
+			my $stack = 0;   # true if agent is to be stacked.
+			if ($agent->ping_check()) {
+				if ($agent->get_ping_errlev() >= $agent->get_notify_level()) {
+					$stack = 1;
+				}
 			}
-		}
-		if ($agent->snmp_check()) {
-			if ($agent->get_snmp_errlev() >= $agent->get_notify_level()) {
-				$stack = 1;
+			if ($agent->http_check()) {
+				if ($agent->get_http_errlev() >= $agent->get_notify_level()) {
+					$stack = 1;
+				}
 			}
-		}
-		if ($agent->plugin_check()) {
-			if ($agent->get_plugin_errlev() >= $agent->get_notify_level()) {
-				$stack = 1;
+			if ($agent->snmp_check()) {
+				if ($agent->get_snmp_errlev() >= $agent->get_notify_level()) {
+					$stack = 1;
+				}
 			}
-		}
+			if ($agent->plugin_check()) {
+				if ($agent->get_plugin_errlev() >= $agent->get_notify_level()) {
+					$stack = 1;
+				}
+			}
 
-		if ($stack) { 
-			&add_to_notify_stack($agent);	
-			# reset errlev if set to do so.
-			if ($agent->get_errlev_reset()) {
-				$agent->set_ping_errlev('0');
-				$agent->set_http_errlev('0');
-				$agent->set_snmp_errlev('0');
-				$agent->set_plugin_errlev('0');
+			if ($stack) { 
+				&add_to_notify_stack($agent);	
+				# reset errlev if set to do so.
+				if ($agent->get_errlev_reset()) {
+					$agent->set_ping_errlev('0');
+					$agent->set_http_errlev('0');
+					$agent->set_snmp_errlev('0');
+					$agent->set_plugin_errlev('0');
+				}
 			}
 		}
-
 	}
 	else {
 		# no errors detected

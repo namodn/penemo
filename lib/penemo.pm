@@ -157,6 +157,7 @@ sub _penemo_config
 		notify_method_2 => 'email',
 		notify_method_3 => 'email',
 		notify_level    => '1',
+		notify_cap	=> '0',
 		notify_email_1  => 'root@localhost',
 		notify_email_2  => 'root@localhost',
 		notify_email_3  => 'root@localhost',
@@ -214,6 +215,7 @@ sub _penemo_config
    		notify_method_2	=> $conf{notify_method_2},
    		notify_method_3	=> $conf{notify_method_3},
    		notify_level 	=> $conf{notify_level},
+   		notify_cap 	=> $conf{notify_cap},
    		notify_email_1 	=> $conf{notify_email_1},
    		notify_email_2 	=> $conf{notify_email_2},
    		notify_email_3 	=> $conf{notify_email_3},
@@ -391,6 +393,10 @@ sub _notify_level {
 	my ($self, $ip) = @_;
 	$self->{$ip}{notify_level}; 
 }
+sub _notify_cap { 
+	my ($self, $ip) = @_;
+	$self->{$ip}{notify_cap}; 
+}
 
 sub _notify_email_1 { 
 	my ($self, $ip) = @_;
@@ -497,6 +503,7 @@ sub get_next_agent {
 					notify_method_2	=> $self->_notify_method_2($ip),
 					notify_method_3	=> $self->_notify_method_3($ip),
 					notify_level	=> $self->_notify_level($ip),
+					notify_cap	=> $self->_notify_cap($ip),
 					notify_email_1	=> $self->_notify_email_1($ip),
 					notify_email_2	=> $self->_notify_email_2($ip),
 					notify_email_3	=> $self->_notify_email_3($ip),
@@ -800,7 +807,7 @@ sub index_html_write {
 		print HTML "<TABLE WITH=600 ALIGN=CENTER BORDER=0>\n";
 
 		foreach my $group (@grouplist) { 
-			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=3>\n";
+			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=4>\n";
 			print HTML "<FONT SIZE=4><B>$group</B><BR>\n"; 
 			print HTML "</TD></TR>\n";
 			foreach my $agent (@agentlist) { 
@@ -824,10 +831,25 @@ sub index_html_write {
 					} 
 					print HTML "<A HREF=\"agents/$ip/index.html\">$ip</A><BR>\n";
 					print HTML "</TD>\n";
-					print HTML "<TD WIDTH=400 ALIGN=LEFT>\n";
+					print HTML "<TD WIDTH=200 ALIGN=LEFT>\n";
 					print HTML "<FONT COLOR=#CCDDA><B>\n";
 					print HTML $agent->get_name();
 					print HTML "</B></FONT>\n"; 
+					print HTML "</TD>\n";
+					print HTML "<TD WIDTH=200 ALIGN=LEFT>\n";
+					print HTML "<FONT SIZE=2 COLOR=#AAAADD><I>";
+					if ($agent->ping_check()) { print HTML " ping"; }
+					if ($agent->http_check()) { print HTML ", http"; }
+					if ($agent->snmp_check()) { 
+						print HTML ", snmp: "; 
+						print HTML $agent->get_snmp_mibs();
+					}
+					if ($agent->plugin_check()) { 
+						print HTML ", plugin "; 
+						print HTML $agent->get_plugin_mods();
+					}
+					print HTML "</I></FONT><BR>\n";
+
 					print HTML "</TD>\n";
 					print HTML "<TD WIDTH=50 ALIGN=LEFT>\n";
 					print HTML "<FONT SIZE=2>\n";
@@ -843,7 +865,7 @@ sub index_html_write {
 					print HTML "</TD></TR>\n";
 				} 
 			} 
-			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=3>\n";
+			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=4>\n";
 			print HTML "&nbsp;<BR>\n"; 
 			print HTML "</TD></TR>\n";
 		} 
@@ -916,6 +938,7 @@ sub new {
 			notify_method_2	=> $args{notify_method_2},
 			notify_method_3	=> $args{notify_method_3},
 			notify_level	=> $args{notify_level},
+			notify_cap	=> $args{notify_cap},
 			notify_email_1	=> $args{notify_email_1},
 			notify_email_2	=> $args{notify_email_2},
 			notify_email_3	=> $args{notify_email_3},
@@ -1017,6 +1040,7 @@ sub get_notify_method_1		{ $_[0]->{notify_method_1} }
 sub get_notify_method_2		{ $_[0]->{notify_method_1} }
 sub get_notify_method_3		{ $_[0]->{notify_method_1} }
 sub get_notify_level		{ $_[0]->{notify_level} }
+sub get_notify_cap		{ $_[0]->{notify_cap} }
 sub get_notify_email_1		{ $_[0]->{notify_email_1} }
 sub get_notify_email_2		{ $_[0]->{notify_email_2} }
 sub get_notify_email_3		{ $_[0]->{notify_email_3} }
@@ -1507,6 +1531,40 @@ sub write_agent_html
 		system("mkdir $html_dir/agents/$ip"); 
 	}
 
+	# write agents conf.html
+	#
+	open(CONF, ">$html_dir/agents/$ip/conf.html") 
+		or penemo::core->notify_die("Can't open $html_dir/agents/$ip/conf.html to write: $!\n"); 
+	print CONF "<HTML>\n"; 
+	print CONF "<HEAD>\n"; 
+	print CONF "\t<TITLE>penemo -- Status on $ip</TITLE>\n"; 
+	print CONF "</HEAD>\n"; 
+	print CONF "<BODY BGCOLOR=\"#000000\" TEXT=\"#338877\" "; 
+	print CONF "LINK=\"#AAAAAA\" VLINK=\"#AAAAAA\">\n"; 
+	print CONF "<CENTER>\n"; 
+	print CONF "\t<FONT SIZE=5><B>$ip - $name</B></FONT>\n"; 
+	print CONF "<HR WIDTH=50%>\n"; 
+	print CONF "</CENTER>\n"; 
+	print CONF "&nbsp;<BR>\n";
+	print CONF "<B>group</B>: ", $self->get_group(), "<BR>\n";;
+	print CONF "<B>checks</B>:<I>";
+	if ($self->ping_check()) { print CONF " ping"; }
+	if ($self->http_check()) { print CONF ", http"; }
+	if ($self->snmp_check()) { 
+		print CONF ", snmp: "; 
+		print CONF $self->get_snmp_mibs();
+	}
+	if ($self->plugin_check()) { 
+		print CONF ", plugin "; 
+		print CONF $self->get_plugin_mods();
+	}
+	print CONF "</I><BR>\n";
+
+	print CONF "</BODY></HTML>\n";
+	close CONF;
+
+	# write agents index.html
+	#
 	open(HTML, ">$html_dir/agents/$ip/index.html") 
 		or penemo::core->notify_die("Can't open $html_dir/agents/$ip/index.html to write: $!\n"); 
 
@@ -1518,8 +1576,9 @@ sub write_agent_html
 	print HTML "LINK=\"#AAAAAA\" VLINK=\"#AAAAAA\">\n"; 
 	print HTML "<CENTER>\n"; 
 	print HTML "\t<FONT SIZE=5><B>$ip - $name</B></FONT>\n"; 
-	print HTML "<HR WITH=50%>\n"; 
+	print HTML "<HR WIDTH=50%>\n"; 
 
+	print HTML "[<A HREF=\"conf.html\">current agent config</A>]  \n"; 
 	if ($self->snmp_check()) { 
 		my @mibs = split(/ /, $self->get_snmp_mibs());
 		if (-f "$html_dir/agentdump/$ip") {
@@ -1667,6 +1726,7 @@ sub write_agent_html
 			print HTML "<BR>\n";
 		}
 	}
+	close HTML;
 }
 
 
