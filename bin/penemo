@@ -137,14 +137,7 @@ foreach my $agent (@agents) {
 			}
 
 			if ($stack) { 
-				&add_to_notify_stack($agent);	
-				# reset errlev if set to do so.
-				if ($agent->get_notify_errlev_reset()) {
-					$agent->set_ping_errlev('0');
-					$agent->set_http_errlev('0');
-					$agent->set_snmp_errlev('0');
-					$agent->set_plugin_errlev('0');
-				}
+				&add_to_errors($agent);	
 			}
 		}
 	}
@@ -153,10 +146,9 @@ foreach my $agent (@agents) {
 		if ( ($agent->get_check_status()) && ($agent->have_notifications_been_sent()) ) {
 			# notifications have been sent, but now, no errors detected.
 			# add to notification stack, for resolved notification.
-			$conf->push_notification_stack($agent);	
-			print "  $aid: error(s) resolved.\n";
-			# error on this agent has been resolved
-			$agent->set_error_resolved('1');
+			#$conf->push_notification_stack($agent);	
+
+			&add_to_resolved($agent);
 		}
 		# no errors detected, reset all tracking data. 
 		$agent->set_notifications_sent('0');
@@ -170,8 +162,7 @@ foreach my $agent (@agents) {
 	$conf->push_html_agentlist($agent);
 
 	# write current errorlevels and misc agent data to file
-	#$agent->write_persistent_data($conf->get_dir_data());
-	# -- not here because values might change still
+	$agent->write_persistent_data($conf->get_dir_data());
 }
 
 # print total agents loaded
@@ -188,13 +179,6 @@ print "notification proccess.\n";
 
 # get list of notification objects
 my @notification_objects = $conf->get_notification_object_array();
-
-# save current error levels to file for next time
-# -- done here because get_notification_objects_array modifies errlevs --
-foreach my $agent (@agents) {
-	# write current errorlevels and misc agent data to file
-	$agent->write_persistent_data($conf->get_dir_data());
-}
 
 # loop through notification objects
 foreach my $notify (@notification_objects) {
@@ -223,7 +207,7 @@ exit;
 ## subroutines
 ##
 
-# agent check subroutine, takes the $agent reference as a parameter.
+# agent check subroutines, takes the $agent reference as a parameter.
 sub ping_check {
 	my $agent = $_[0];
 	my $aid = $agent->get_aid();
@@ -349,17 +333,61 @@ sub plugin_check {
 }
 
 
-sub add_to_notify_stack {
+# when an error is detect, run this function to do all necesary stuff for notification
+sub add_to_errors {
 	my $agent = $_[0];
 	my $aid = $agent->get_aid();
 	print "  $aid: error(s) detected adding to notification stack.\n";
-	$conf->push_notification_stack($agent);
+
 	$agent->set_have_notifications_been_sent('1');
+
 	# currently on the notification stack
 	$agent->set_on_notify_stack('1');
+
+	# reset errlev if set to do so.
+	if ($agent->get_notify_errlev_reset()) {
+		$agent->set_ping_errlev('0');
+		$agent->set_http_errlev('0');
+		$agent->set_snmp_errlev('0');
+		$agent->set_plugin_errlev('0');
+	}
+
+	# check to see if should promote tier level
+	if ($agent->get_notifications_sent() >= $agent->get_tier_promote()) { 
+		unless ($agent->get_current_tier() == '3') { 
+			unless ($agent->get_error_resolved()) { 
+				$agent->set_current_tier('+'); 
+				print "  $aid: promoting to tier ", $agent->get_current_tier(), "\n"; 
+			}
+			$agent->set_notifications_sent('0'); 
+		}
+	}
+
+	# load data for notification processing
+	$conf->organize_notification_info($agent);
+
+	$agent->set_notifications_sent('+');
+}
+
+# if no error was detected, yet data shows the last time penemo ran there was an error with this agent,
+# run this function to add to notifications with the status of resolved.
+sub add_to_resolved {
+	my $agent = $_[0];
+	my $aid = $agent->get_aid();
+	print "  $aid: error(s) resolved.\n";
+
+	# error on this agent has been resolved
+	$agent->set_error_resolved('1');
+
+	# load data for notification processing
+	$conf->organize_notification_info($agent);
+
+	# after adding to outgoing notifications, reset tier level
+	$agent->set_current_tier('1');
 }
 
 
+# date manipulation stuff
 sub convert_date_to_string {
 	my $date = shift;               # Format is 'Thu Jan 13 09:39:40 PST 2000'
 	$date =~ s/\s{2}/ /g;
