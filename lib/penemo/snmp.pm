@@ -38,7 +38,7 @@
 
 package penemo::snmp;
 
-use lib '/usr/local/share/penemo/modules/';
+use lib "$ENV{PENEMO_MODS}";
 
 use strict;
 

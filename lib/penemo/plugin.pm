@@ -38,7 +38,7 @@
 
 package penemo::plugin;
 
-use lib '/usr/local/share/penemo/modules/';
+use lib "$ENV{PENEMO_MODS";
 
 use strict;
 
@@ -88,7 +88,7 @@ sub exec {
 	}
 
 	# execute check plugin module
-	@output = `$dir_plugin/$mod.mod exec`;
+	@output = `$dir_plugin/$mod.mod exec $ip`;
 
 	unless (@output) {
 		$self->{status} = 0;

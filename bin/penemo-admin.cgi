@@ -5,7 +5,7 @@ use CGI qw(:standard);
 use CGI::Carp;
 
 
-use lib '/usr/local/share/penemo/modules/';
+use lib "$ENV{PENEMO_MODDIR}";
 use penemo;
 
 my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
