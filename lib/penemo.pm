@@ -318,6 +318,9 @@ sub _agent_config {
 			if ($conf{$agent}{snmp_mibs}) {
 				$conf{$agent}{snmp_check} = '1';
 			}
+			if ($conf{$agent}{match_1}) {
+				$conf{$agent}{snmp_search} = '1';
+			}
 		}
 		elsif ($line =~ /^\s*PING\s*/i) {
 			$conf{$agent}{ping_check} = "1";
@@ -742,7 +745,7 @@ sub organize_notification_info {
 	$self->{notification_org}{$delm}{tier} = $tier;
 	$self->{notification_org}{$delm}{func} = $delm;
 	$self->{notification_org}{$delm}{method} = $method;
-	$self->{notification_org}{$delm}{dir_sendmail_bin} = $self->_dir_sendmail_bin();
+	$self->{notification_org}{$delm}{dir_sendmail_bin} = $self->get_dir_sendmail_bin();
 }
 
 sub get_notification_object_array {
@@ -979,6 +982,7 @@ sub _get_aid_list {
 		next if ($aid eq 'method');
 		next if ($aid eq 'func');
 		next if ($aid eq 'tier');
+		next if ($aid eq 'dir_sendmail_bin');
 		push @aid_list, $aid;
 	}
 	return (@aid_list);

@@ -36,8 +36,9 @@ use IO::Handle;
 #unless ($< == 0) { die "must be run as root.\n"; } 
 
 # penemo specific modules
-use lib '/usr/local/share/penemo/lib/';
-use diagnostics;
+#use lib '/usr/local/share/penemo/lib/';
+use lib '../lib/';
+#use diagnostics;
 
 use penemo;
 
