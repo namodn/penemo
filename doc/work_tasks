@@ -22,8 +22,6 @@
 
 [x] snmp mibs dont have a way to notify on snmp alerts within mib check.
 
-[x] make a history page for each agent.
-
 [x] make it so notifications reset <type>_errlev, so that there arent
       overlapping counts from different checks in same agent, resulting
       in more notifications than set in notify_level
@@ -31,6 +29,11 @@
 
 [-] notify exec (pain in the ass)
 
+
+[!] command line parameters
+
+[!] agent history using penemo output, stored in a file, and a cgi (penemo-admin) to
+    run different queries on the data file etc. 
 
 [?] make http its own obj, or something, impliment multi-http checks.
 
