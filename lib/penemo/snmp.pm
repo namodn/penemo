@@ -116,7 +116,6 @@ sub poll {
 			next;
 		}
 		elsif ($line =~ '--miberrors') {
-print "MIB ERRORS line DETECTED\n";
 			$test = '3';
 			next;
 		}
@@ -137,7 +136,6 @@ print "MIB ERRORS line DETECTED\n";
 		$self->{message} = "internal error in snmp.pm (no information returned)\n";
 	}
 	elsif (@miberrors) {
-print "MIB ERRORS DETECTED\n";
 		$self->{status} = 0;
 		$self->{message} = "@miberrors";
 		$self->{walk} = "@agentdump";

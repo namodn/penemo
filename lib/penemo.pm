@@ -648,6 +648,69 @@ sub organize_notification_info {
 			# global setting for each notification message (object)
 			$self->{notification_org}{$email}{current_tier} = $agent->get_current_tier();
 		}
+		else {
+			$self->{notification_org}{notify}{$ip}{exec} = $exec;
+			$self->{notification_org}{notify}{$ip}{ping_check} = 
+					$agent->ping_check(); 
+			$self->{notification_org}{notify}{$ip}{http_check} = 
+					$agent->http_check();
+			$self->{notification_org}{notify}{$ip}{snmp_check} = 
+					$agent->snmp_check();
+			$self->{notification_org}{notify}{$ip}{plugin_check} = 
+					$agent->plugin_check();
+			$self->{notification_org}{notify}{$ip}{ping_status} = 
+					$agent->get_ping_status(); 
+			$self->{notification_org}{notify}{$ip}{http_status} = 
+					$agent->get_http_status(); 
+			$self->{notification_org}{notify}{$ip}{http_get_status} = 
+					$agent->get_http_get_status(); 
+			$self->{notification_org}{notify}{$ip}{http_search_status} = 
+					$agent->get_http_search_status(); 
+			
+			if ($agent->get_snmp_mibs()) {
+				$self->{notification_org}{notify}{$ip}{mib_list} =
+						$agent->get_snmp_mibs();
+				my @mibs = split(/ /, $agent->get_snmp_mibs());
+				foreach my $mib (@mibs) {
+					$self->{notification_org}{notify}{$ip}{snmp_status} = 
+							$agent->get_snmp_status($mib); 
+					$self->{notification_org}{notify}{$ip}{snmp_msg} = 
+							$agent->get_snmp_message($mib);
+				}
+			}
+			else {
+				$self->{notification_org}{notify}{$ip}{snmp_status} = ''; 
+				$self->{notification_org}{notify}{$ip}{snmp_msg} = '';
+			}
+
+			if ($agent->get_plugin_mods()) {
+				$self->{notification_org}{notify}{$ip}{mib_list} =
+						$agent->get_plugin_mods();
+				my @mods = split(/ /, $agent->get_plugin_mods());
+				foreach my $mod (@mods) {
+					$self->{notification_org}{notify}{$ip}{plugin_status} = 
+							$agent->get_plugin_status($mod); 
+					$self->{notification_org}{notify}{$ip}{plugin_msg} = 
+							$agent->get_plugin_message($mod);
+				}
+			}
+			else {
+				$self->{notification_org}{notify}{$ip}{plugin_status} = ''; 
+				$self->{notification_org}{notify}{$ip}{plugin_msg} = '';
+			}
+			
+			
+			$self->{notification_org}{notify}{$ip}{ping_msg} = 
+					$agent->get_ping_message(); 
+			$self->{notification_org}{notify}{$ip}{http_get_msg} =
+					$agent->get_http_get_message();
+			$self->{notification_org}{notify}{$ip}{http_search_msg} =
+					$agent->get_http_search_message();
+			$self->{notification_org}{notify}{$ip}{name} = $agent->get_name();
+
+			# global setting for each notification message (object)
+			$self->{notification_org}{notify}{current_tier} = $agent->get_current_tier();
+		}
 	}
 }
 
@@ -1488,11 +1551,9 @@ sub agent_html_write
 
 		foreach my $mib (@mibs) {
 			if ($self->_print_snmp_html($mib)) {
-print "is html\n";
 				print HTML $self->_print_snmp_html($mib);
 			}
 			else {
-print "isnt html\n";
 				$self->set_index_error_detected();
 				print HTML "$bad_light\n";
 				print HTML "<FONT COLOR=\"#DD1111\"> ", $self->get_snmp_message($mib),
@@ -1676,37 +1737,8 @@ sub email {
 			push @msg, "  all errors resolved.\n";
 		}
 		else {
-			if ( ($self->_get_ping_check($ip)) && (! $self->_get_ping_status($ip)) ) {
-				my $msg = $self->_get_ping_msg($ip);
-				chomp $msg;
-				my $line = "  ping: $msg\n";
-				push @msg, $line;
-			}
-			if ($self->_get_http_check($ip)) {
-				unless ($self->_get_http_get_status($ip)) {
-					my $msg = $self->_get_http_get_msg($ip);
-					chomp $msg;
-					my $line = "  http: $msg\n";
-					push @msg, $line;
-				}
-				elsif ( (! $self->_get_http_search_status($ip)) && 
-						($self->_get_http_search_msg($ip)) ) {
-					my $msg = $self->_get_http_search_msg($ip);
-					chomp $msg;
-					my $line = "  http: $msg\n";
-					push @msg, $line;
-				}
-			}
-			if ( ($self->_get_snmp_check($ip)) && (! $self->_get_snmp_status($ip)) ) {
-				my $msg = $self->_get_snmp_msg($ip);
-				chomp $msg;
-				my $line = "  snmp: $msg\n";
-				push @msg, $line;
-			}
-			if ( ($self->_get_plugin_check($ip)) && (! $self->_get_plugin_status($ip)) ) {
-				my $msg = $self->_get_plugin_msg($ip);
-				chomp $msg;
-				my $line = "  plugin: $msg\n";
+			my @tmp = $self->get_message($ip);
+			foreach my $line (@tmp) {
 				push @msg, $line;
 			}
 		}
@@ -1733,6 +1765,46 @@ sub email {
 
 sub execute {
 	print "execute method not implemented.\n";
+}
+
+
+sub get_message {
+	my ($self, $ip) = @_;
+	my @msg = ();
+	if ( ($self->_get_ping_check($ip)) && (! $self->_get_ping_status($ip)) ) {
+		my $msg = $self->_get_ping_msg($ip);
+		chomp $msg;
+		my $line = "  ping: $msg\n";
+		push @msg, $line;
+	}
+	if ($self->_get_http_check($ip)) {
+		unless ($self->_get_http_get_status($ip)) {
+			my $msg = $self->_get_http_get_msg($ip);
+			chomp $msg;
+			my $line = "  http: $msg\n";
+			push @msg, $line;
+		}
+		elsif ( (! $self->_get_http_search_status($ip)) && 
+				($self->_get_http_search_msg($ip)) ) {
+			my $msg = $self->_get_http_search_msg($ip);
+			chomp $msg;
+			my $line = "  http: $msg\n";
+			push @msg, $line;
+		}
+	}
+	if ( ($self->_get_snmp_check($ip)) && (! $self->_get_snmp_status($ip)) ) {
+		my $msg = $self->_get_snmp_msg($ip);
+		chomp $msg;
+		my $line = "  snmp: $msg\n";
+		push @msg, $line;
+	}
+	if ( ($self->_get_plugin_check($ip)) && (! $self->_get_plugin_status($ip)) ) {
+		my $msg = $self->_get_plugin_msg($ip);
+		chomp $msg;
+		my $line = "  plugin: $msg\n";
+		push @msg, $line;
+	}
+	return(@msg);
 }
 
 
