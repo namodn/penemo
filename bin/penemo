@@ -346,12 +346,11 @@ sub add_to_notify_stack {
 
 
 sub convert_date_to_string {
-	my $date = shift;               # Format is 'Thu Jan 13 09:39:40 2000'
+	my $date = shift;               # Format is 'Thu Jan 13 09:39:40 PST 2000'
 	my @date = split (/\s/, $date); # Split on whitespace
 	my ($month, $day, $time, $year) = ($date[1], $date[2], $date[3], $date[5]);
 	$month = convert_month($month);
 	my ($hour, $minutes, $seconds) = split(/:/, $time);
-	print "$year$month$day$hour$minutes\n";
 	return ("$year$month$day$hour$minutes");
 }
 
