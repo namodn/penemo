@@ -35,12 +35,22 @@
 
 [x] config viewing from web
 
+[x] tier support and promote, as well as notify_errlev_reset are not agent
+    config options instead of global options, update config html display
+    accordingly
 
 
 [-] notify_exec (pain in the ass)
     (note: try notify_exec_name to group by, instead of actual notify_exec)
 
 
+[!] make a function for "quick list of checks(above)" to do colors for if
+    errors etc. and display for anywhere by calling the function to incorporate
+    on main page as well as config page, etc.
+
+[!] localize all config options, so there is no "global" conf file (penemo.conf)
+    they all reside in one conf file (agent.conf format) with a DEFAULT_CONFIG
+    being the default for each agent.
 
 [!] command line parameters
 

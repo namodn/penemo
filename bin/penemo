@@ -40,8 +40,10 @@ use lib '/home/nick/devel/penemo/modules/';
 
 use penemo;
 
-my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
-my $agent_conf_file  = '/usr/local/etc/penemo/agent.conf';
+#my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
+#my $agent_conf_file  = '/usr/local/etc/penemo/agent.conf';
+my $penemo_conf_file = '/home/nick/devel/penemo/conf/penemo.conf';
+my $agent_conf_file  = '/home/nick/devel/penemo/conf/agent.conf';
 
 my $version = '1.0';
 my $date = `date`;
@@ -73,11 +75,11 @@ foreach my $agent (@agents) {
 
 	# load persistent data ( error levels etc. ) into $agent object
 	print "- $ip: loading agent data.\n";
-	$agent->load_persistent_data($conf->get_data_dir());
+	$agent->load_persistent_data($conf->get_dir_data());
 
 	print "\t\tnotify_level: ", $agent->get_notify_level(),
 		", notify_cap: ", $agent->get_notify_cap(),
-		", errlev_reset: ", $agent->get_errlev_reset(), "\n";
+		", notify_errlev_reset: ", $agent->get_notify_errlev_reset(), "\n";
 
 	if ($agent->get_paused()) {
 		if ($agent->get_paused_end <= $date_string) {
@@ -137,7 +139,7 @@ foreach my $agent (@agents) {
 			if ($stack) { 
 				&add_to_notify_stack($agent);	
 				# reset errlev if set to do so.
-				if ($agent->get_errlev_reset()) {
+				if ($agent->get_notify_errlev_reset()) {
 					$agent->set_ping_errlev('0');
 					$agent->set_http_errlev('0');
 					$agent->set_snmp_errlev('0');
@@ -158,11 +160,10 @@ foreach my $agent (@agents) {
 		}
 		# no errors detected, reset all tracking data. 
 		$agent->set_notifications_sent('0');
-		#$agent->set_current_tier('0');
 	}
 	# write agent html
 	print "  $ip: writing agents html file.\n";
-	$agent->write_agent_html( $conf->get_html_dir() );
+	$agent->write_agent_html( $conf->get_dir_html() );
 	# add to list of agents for index html
 	$conf->push_html_agentlist($agent);
 }
@@ -189,7 +190,7 @@ my @notification_objects = $conf->get_notification_object_array();
 foreach my $agent (@agents) {
 	# write current errorlevels and misc agent data to file
 	#print "  ", $agent->get_ip(), ": writing agent data.\n";
-	$agent->write_persistent_data($conf->get_data_dir());
+	$agent->write_persistent_data($conf->get_dir_data());
 }
 
 # loop through notification objects
@@ -255,7 +256,7 @@ sub http_check {
 
 	if ($agent->http_check()) {
 		print "  $ip: http status  : "; 
-		$agent->http( $conf->get_http_command(), $conf->get_cache_dir() );
+		$agent->http( $conf->get_http_command(), $conf->get_dir_cache() );
 		print $agent->get_http_status();
 
 		unless ($agent->get_http_status()) { 
@@ -281,7 +282,7 @@ sub snmp_check {
 
 	if ($agent->snmp_check()) {
 		print "  $ip: snmp status  : "; 
-		$agent->snmp($conf->get_plugin_dir(), $conf->get_ucd_bin_dir());
+		$agent->snmp($conf->get_dir_plugin(), $conf->get_dir_ucd_bin());
 
 		my @snmp_mibs = split(/ /, $agent->get_snmp_mibs());
 		my $snmp_errlev = 1;
@@ -317,7 +318,7 @@ sub plugin_check {
 
 	if ($agent->plugin_check()) {
 		print "  $ip: plugin status  : "; 
-		$agent->plugin($conf->get_plugin_dir());
+		$agent->plugin($conf->get_dir_plugin());
 
 		my @plugin_mods = split(/ /, $agent->get_plugin_mods());
 		my $plugin_errlev = 1;

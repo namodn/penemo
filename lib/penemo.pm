@@ -133,12 +133,12 @@ use strict;
 sub load_config
 {
 	my ($class, $penemo_conf, $agent_conf) = @_;
-	my ($global_conf_ref, $agent_defaults_ref) = &_penemo_config("$penemo_conf");
 
+	my ($global_conf_ref, $agent_defaults_ref) = &_default_config($penemo_conf);
 	my %global_conf = %$global_conf_ref;
 	my %agent_defaults = %$agent_defaults_ref;
 
-	my $agent_ref = &_agent_config("$agent_conf", %agent_defaults);
+	my $agent_ref = &_agent_config($agent_conf, %agent_defaults);
 	my %agents = %$agent_ref;
 
 	my %conf = (%global_conf, %agents);
@@ -147,12 +147,12 @@ sub load_config
 	bless $ref, $class;
 }
 
-sub _penemo_config
+sub _default_config
 {
-   my ($conf_file) = @_;
-   my $key = '';
-   my $value = '';
-   my %conf = ( 
+	my ($conf_file) = @_;
+	my $key = '';
+	my $value = '';
+	my %conf = ( 
 		notify_method_1 => 'email',
 		notify_method_2 => 'email',
 		notify_method_3 => 'email',
@@ -164,54 +164,46 @@ sub _penemo_config
 		notify_exec_1	=> '',
 		notify_exec_2	=> '',
 		notify_exec_3	=> '',
-		instance_name	=> 'default instance',
+		notify_errlev_reset	=> '1',
 		http_command    => 'wget',
 		snmp_community  => 'public',
 		ping_timeout    => '1',
-		html_dir        => '/usr/local/share/penemo/html',
-		cache_dir       => '/usr/local/share/penemo/cache',
-		data_dir	=> '/usr/local/share/penemo/data',
-		penemo_bin      => '/usr/local/sbin/penemo',
-		ucd_bin_dir     => '/usr/local/bin',
-		plugin_dir	=> '/usr/local/share/penemo/plugin',
-		log_dir		=> '/usr/local/share/penemo/logs',
-		cgibin_dir	=> '/cgi-bin',
-		errlev_reset	=> '1',
+		dir_html        => '/usr/local/share/penemo/html',
+		dir_cache       => '/usr/local/share/penemo/cache',
+		dir_data	=> '/usr/local/share/penemo/data',
+		dir_ucd_bin     => '/usr/local/bin',
+		dir_plugin	=> '/usr/local/share/penemo/plugins',
+		dir_log		=> '/usr/local/share/penemo/logs',
+		dir_cgibin	=> '/cgi-bin',
 		tier_support	=> '0',
-		tier_promote	=> '5',
-		emergency_contact => 'root@localhost',
-   );
+		tier_promote	=> '3',
+		instance_name	=> 'default instance',
+		penemo_bin      => '/usr/local/sbin/penemo',
+	);
+	open(CFG, "$conf_file")
+	            or penemo::core->notify_die("Can't open $conf_file : $!\n");
 
-   open(CFG, "$conf_file")
-         or penemo::core->notify_die("Can't open $conf_file : $!\n");
+	while (<CFG>) { 
+		next if ($_ =~ /^\s*#/); 
+		next if ($_ =~ /^$/); 
+		chomp; 
+		if ($_ =~ /^notify_exec/) { 
+			($key, $value) = split(/_command\s*/, $_); 
+			$conf{'notify_exec'} = $value; 
+			next; 
+		} 
+		elsif ($_ =~ /^instance_name/) { 
+			($key, $value) = split(/_name\s*/, $_); 
+			$conf{'instance_name'} = $value; 
+			next; 
+		} 
+		($key, $value) = split(' ', $_); 
+		$conf{$key} = $value; 
+	} 
+	close CFG;
 
-   while (<CFG>)
-   {
-      next if ($_ =~ /^\s*#/);
-      next if ($_ =~ /^$/);
-
-      chomp;
-
-      if ($_ =~ /^notify_exec/)
-      {
-         ($key, $value) = split(/_command\s*/, $_);
-         $conf{'notify_exec'} = $value;
-         next;
-      }
-      elsif ($_ =~ /^instance_name/)
-      {
-         ($key, $value) = split(/_name\s*/, $_);
-	 $conf{'instance_name'} = $value;
-	 next;
-      }
-
-      ($key, $value) = split(' ', $_);
-      $conf{$key} = $value;
-   }
-   close CFG;
-   
-   my %agent = (
-   		notify_method_1	=> $conf{notify_method_1},
+	my %agent = (
+		notify_method_1	=> $conf{notify_method_1},
    		notify_method_2	=> $conf{notify_method_2},
    		notify_method_3	=> $conf{notify_method_3},
    		notify_level 	=> $conf{notify_level},
@@ -226,30 +218,28 @@ sub _penemo_config
 		ping_timeout    => $conf{ping_timeout},
 		id_name		=> 'undefined',
 		id_group	=> 'undefined',
-		errlev_reset	=> $conf{errlev_reset},
-		
-   );
+		notify_errlev_reset	=> $conf{notify_errlev_reset},
+		notification_stack	=> '',
+		notification_org	=> [],
+		tier_support	=> $conf{tier_support},
+		tier_promote	=> $conf{tier_promote},
+	);
 
-   my %global = ( default	=> {
-					html_dir        => $conf{html_dir},
-					cache_dir       => $conf{cache_dir},
-					data_dir	=> $conf{data_dir},
-					plugin_dir	=> $conf{plugin_dir},
-					log_dir		=> $conf{log_dir},
-					cgibin_dir	=> $conf{cgibin_dir},
-					penemo_bin      => $conf{penemo_bin},
-					ucd_bin_dir	=> $conf{ucd_bin_dir},
-					http_command    => $conf{http_command},
-					instance_name	=> $conf{instance_name},
-					notification_stack	=> '',
-					notification_org	=> [],
-					tier_support	=> $conf{tier_support},
-					tier_promote	=> $conf{tier_promote},
-					emergency_contact => $conf{emergency_contact},
-				},
-   );
+	my %global = ( default	=> {
+			penemo_bin      => $conf{penemo_bin},
+			instance_name	=> $conf{instance_name}, 
+			dir_html        => $conf{dir_html},
+			dir_cache       => $conf{dir_cache},
+			dir_data	=> $conf{dir_data},
+			dir_plugin	=> $conf{dir_plugin},
+			dir_log		=> $conf{dir_log},
+			dir_cgibin	=> $conf{dir_cgibin},
+			dir_ucd_bin	=> $conf{dir_ucd_bin},
+			http_command    => $conf{http_command},
+		},
+	);
    
-   return (\%global, \%agent);
+	return (\%global, \%agent);
 }
 
 sub _agent_config {
@@ -261,15 +251,14 @@ sub _agent_config {
    
         open(CFG, "$conf_file")
                 or penemo::core->notify_die("Can't open $conf_file : $!\n");
-	my @lines = <CFG>;
-        close CFG;
-   
-        chomp @lines;
-        foreach my $line (@lines) {
+        while (<CFG>) {
+		chomp;
+		my $line = $_;
                 $line_num++;
                 $line =~ s/\s*#.*$//;
                 next if ($line =~ /^\s*$/);
                 next unless ($line =~ /^\w*/);
+
 		unless ($ip) {
 			next if ($begin); 
 			my $else = '';
@@ -326,7 +315,11 @@ sub _agent_config {
 				$conf{$ip}{plugin_check} = '1';
 			}
 		}
+		elsif ($line =~ /^\s*TIER\s{1}/i) {
+			&_agent_params(\%conf, $ip, 'tier', $line);
+		}
 	}
+	close CFG;
 
         return \%conf;
 }
@@ -347,19 +340,16 @@ sub _agent_params {
 }
 
 # methods for load_config object. (global conf settings).
-sub get_html_dir                { $_[0]->{default}{html_dir} }
-sub get_cache_dir               { $_[0]->{default}{cache_dir} }
-sub get_data_dir		{ $_[0]->{default}{data_dir} }
-sub get_plugin_dir		{ $_[0]->{default}{plugin_dir} }
-sub get_log_dir			{ $_[0]->{default}{log_dir} }
-sub get_cgibin_dir		{ $_[0]->{default}{cgibin_dir} }
+sub get_dir_html                { $_[0]->{default}{dir_html} }
+sub get_dir_cache               { $_[0]->{default}{dir_cache} }
+sub get_dir_data		{ $_[0]->{default}{dir_data} }
+sub get_dir_plugin		{ $_[0]->{default}{dir_plugin} }
+sub get_dir_log			{ $_[0]->{default}{dir_log} }
+sub get_dir_cgibin		{ $_[0]->{default}{dir_cgibin} }
 sub get_penemo_bin              { $_[0]->{default}{penemo_bin} }
-sub get_ucd_bin_dir             { $_[0]->{default}{ucd_bin_dir} }
+sub get_dir_ucd_bin             { $_[0]->{default}{dir_ucd_bin} }
 sub get_http_command            { $_[0]->{default}{http_command} }
 sub get_instance_name		{ $_[0]->{default}{instance_name} }
-sub get_tier_support		{ $_[0]->{default}{tier_support} }
-sub get_tier_promote		{ $_[0]->{default}{tier_promote} }
-sub get_emergency_contact	{ $_[0]->{default}{emergency_contact} }
 
 sub _next_ip {
 	my @ip_list = split (/ /, $_[0]->{agent_list});
@@ -448,9 +438,17 @@ sub _plugin_mods {
 	my ($self, $ip) = @_;
 	$self->{$ip}{plugin_mods};
 }
-sub _errlev_reset {
+sub _notify_errlev_reset {
 	my ($self, $ip) = @_;
-	$self->{$ip}{errlev_reset};
+	$self->{$ip}{notify_errlev_reset};
+}
+sub _tier_support { 
+	my ($self, $ip) = @_;
+	$self->{$ip}{tier_support} 
+}
+sub _tier_promote { 
+	my ($self, $ip) = @_;
+	$self->{$ip}{tier_promote} 
 }
 
 
@@ -510,7 +508,9 @@ sub get_next_agent {
 					notify_exec_1	=> $self->_notify_exec_1($ip),
 					notify_exec_2	=> $self->_notify_exec_2($ip),
 					notify_exec_3	=> $self->_notify_exec_3($ip),
-					errlev_reset	=> $self->_errlev_reset($ip),
+					tier_support	=> $self->_tier_support($ip),
+					tier_promote	=> $self->_tier_promote($ip),
+					notify_errlev_reset	=> $self->_notify_errlev_reset($ip),
 					current_tier	=> '1',
 	);
 }
@@ -766,14 +766,14 @@ sub index_html_write {
 	my ($self, $version, $date) = @_;
 	my @agentlist = $self->_get_html_agentlist();
 	my @grouplist = ();
-	my $index = $self->get_html_dir() . "/index.html";
+	my $index = $self->get_dir_html() . "/index.html";
 	my $line = '';
 	my $ok_light = penemo::core->html_image('index', 'ok'); 
 	my $bad_light = penemo::core->html_image('index', 'bad'); 
 	my $paused_light = penemo::core->html_image('index', 'pause'); 
 	my $warn_light = penemo::core->html_image('index', 'warn'); 
 	my $max_ip_length = 0;
-	my $cgi_bin = $self->get_cgibin_dir();
+	my $cgi_bin = $self->get_dir_cgibin();
 
 	foreach my $ref (@agentlist) {
 		my $group = $ref->get_group();
@@ -945,6 +945,9 @@ sub new {
 			notify_exec_1	=> $args{notify_exec_1},
 			notify_exec_2	=> $args{notify_exec_2},
 			notify_exec_3	=> $args{notify_exec_3},
+			notify_errlev_reset	=> $args{notify_errlev_reset},
+			tier_support		=> $args{tier_support},
+			tier_promote		=> $args{tier_promote},
                         ping_status		=> '0',
 			ping_errlev		=> '0',
                         ping_message		=> '',
@@ -965,7 +968,7 @@ sub new {
 			plugin_html		=> {},
 			error_detected		=> '',
 			index_error_detected	=> '',
-			errlev_reset		=> $args{errlev_reset},
+			notify_errlev_reset		=> $args{notify_errlev_reset},
 			current_tier		=> $args{current_tier},
 			notifications_sent	=> '0',
 			error_resolved		=> '0',
@@ -982,12 +985,12 @@ sub new {
 }
 
 sub load_persistent_data {
-	my ($self, $data_dir) = @_;
+	my ($self, $dir_data) = @_;
 	my $ip = $self->get_ip();
 
-	if (-f "$data_dir/$ip")
+	if (-f "$dir_data/$ip")
 	{ 
-		open (DATA, "$data_dir/$ip") or penemo::core->notify_die("Can't open $data_dir/$ip: $!\n"); 
+		open (DATA, "$dir_data/$ip") or penemo::core->notify_die("Can't open $dir_data/$ip: $!\n"); 
 			my @lines = <DATA>;
 		close DATA;
 		my (@data) = split(/\s+/, $lines[0]); 
@@ -1011,7 +1014,7 @@ print "\t\tcurrent_tier: $data[4], notifications_sent: $data[5]\n";
 }
 
 sub write_persistent_data {
-	my ($self, $data_dir) = @_;
+	my ($self, $dir_data) = @_;
 	my $ip = $self->get_ip();
 
 	unless ($self->get_error_detected) { $self->set_current_tier('1'); }
@@ -1025,11 +1028,11 @@ sub write_persistent_data {
 	my $paused = $self->get_paused();
 	my $paused_end = $self->get_paused_end();
 	
-	open (DATA, ">$data_dir/$ip") or penemo::core->notify_die("Can't open $data_dir/$ip: $!\n");
+	open (DATA, ">$dir_data/$ip") or penemo::core->notify_die("Can't open $dir_data/$ip: $!\n");
 		print DATA "$ping_errlev\t$http_errlev\t$snmp_errlev\t$plugin_errlev\t$current_tier\t$notifications_sent\t$paused\t$paused_end\n";
 	close DATA;
 
-	system("chmod g=rw $data_dir/$ip");
+	system("chmod g=rw $dir_data/$ip");
 }
 
 
@@ -1060,6 +1063,8 @@ sub set_current_tier {
 
 	$self->{current_tier} = $set; 
 }
+sub get_tier_support	{ $_[0]->{tier_support} }
+sub get_tier_promote	{ $_[0]->{tier_promote} }
 
 sub get_on_notify_stack		{ $_[0]->{on_notify_stack} }
 sub set_on_notify_stack {
@@ -1193,7 +1198,7 @@ sub get_plugin_mods		{ $_[0]->{plugin_mods} }
 
 
 
-sub get_errlev_reset		{ $_[0]->{errlev_reset} }
+sub get_notify_errlev_reset		{ $_[0]->{notify_errlev_reset} }
 sub get_error_detected		{ $_[0]->{error_detected} }
 sub get_index_error_detected	{ $_[0]->{index_error_detected} }
 sub set_error_detected { 
@@ -1422,7 +1427,7 @@ sub http {
 
 # snmp polling function.
 sub snmp {
-        my ($self, $plugin_dir, $ucd_bin_dir) = @_;
+        my ($self, $dir_plugin, $dir_ucd_bin) = @_;
         my $ip        = $self->get_ip;
 	my $community = $self->get_snmp_community();
 	my (@mibs) = split(/ /, $self->get_snmp_mibs());
@@ -1433,8 +1438,8 @@ sub snmp {
 						mib => $mib,
 						community => $community,
 						ip => $ip,
-						plugin_dir => $plugin_dir,
-						ucd_bin_dir => $ucd_bin_dir,
+						dir_plugin => $dir_plugin,
+						dir_ucd_bin => $dir_ucd_bin,
 		);
 
 		$snmp->poll();
@@ -1461,7 +1466,7 @@ sub snmp {
 
 # plugin module execution function.
 sub plugin {
-        my ($self, $plugin_dir) = @_;
+        my ($self, $dir_plugin) = @_;
         my $ip        = $self->get_ip;
 	my (@mods) = split(/ /, $self->get_plugin_mods());
 	my $error_detected = 0;
@@ -1470,7 +1475,7 @@ sub plugin {
 		my $plugin = penemo::plugin->new(
 						mod => $mod,
 						ip => $ip,
-						plugin_dir => $plugin_dir,
+						dir_plugin => $dir_plugin,
 		);
 
 		$plugin->exec();
@@ -1492,25 +1497,25 @@ sub plugin {
 }
 
 sub write_agent_history {
-	my ($self, $html_dir, $entry) = @_;
+	my ($self, $dir_html, $entry) = @_;
 	my $ip = $self->get_ip();
 	if ($entry eq 'date') {
 		$entry = "date: " . `date`;
 	}
 	chomp $entry;
 
-	unless (-d "$html_dir/agents") {
-		system("mkdir $html_dir/agents");
+	unless (-d "$dir_html/agents") {
+		system("mkdir $dir_html/agents");
 	}
-	unless (-d "$html_dir/agents/$ip") {
-		system("mkdir $html_dir/agents/$ip");
+	unless (-d "$dir_html/agents/$ip") {
+		system("mkdir $dir_html/agents/$ip");
 	}
-	unless (-d "$html_dir/agents/$ip/history") {
-		system("mkdir $html_dir/agents/$ip/history");
+	unless (-d "$dir_html/agents/$ip/history") {
+		system("mkdir $dir_html/agents/$ip/history");
 	}
 
-	open (HISTORY, ">>$html_dir/agents/$ip/history/index.html") 
- 			or penemo::core->notify_die("Cant open $html_dir/agents/$ip/history/index.html : $!\n");
+	open (HISTORY, ">>$dir_html/agents/$ip/history/index.html") 
+ 			or penemo::core->notify_die("Cant open $dir_html/agents/$ip/history/index.html : $!\n");
 		print HISTORY "$entry<BR>\n";
 	close HISTORY;
 }
@@ -1519,7 +1524,7 @@ sub write_agent_history {
 
 sub write_agent_html
 {
-	my ($self, $html_dir) = @_;
+	my ($self, $dir_html) = @_;
 	my $ip = $self->get_ip();
 	my $name = $self->get_name();
 
@@ -1527,14 +1532,14 @@ sub write_agent_html
 	my $bad_light = penemo::core->html_image('agent', 'bad'); 
 	my $warn_light = penemo::core->html_image('agent', 'warn'); 
 
-	unless (-d "$html_dir/agents/$ip") { 
-		system("mkdir $html_dir/agents/$ip"); 
+	unless (-d "$dir_html/agents/$ip") { 
+		system("mkdir $dir_html/agents/$ip"); 
 	}
 
 	# write agents conf.html
 	#
-	open(CONF, ">$html_dir/agents/$ip/conf.html") 
-		or penemo::core->notify_die("Can't open $html_dir/agents/$ip/conf.html to write: $!\n"); 
+	open(CONF, ">$dir_html/agents/$ip/conf.html") 
+		or penemo::core->notify_die("Can't open $dir_html/agents/$ip/conf.html to write: $!\n"); 
 	print CONF "<HTML>\n"; 
 	print CONF "<HEAD>\n"; 
 	print CONF "\t<TITLE>penemo -- Status on $ip</TITLE>\n"; 
@@ -1567,7 +1572,11 @@ sub write_agent_html
 	print CONF "plugin: <FONT COLOR=#6666AA>", $self->get_plugin_errlev(), "</FONT> ";
 	print CONF "<BR>&nbsp;<BR>\n";
 
-	#print CONF "tier support: <FONT COLOR=#6666AA>", # not agent value yet.
+	print CONF "<B>tier support</B>: <FONT COLOR=#AA4444>", $self->get_tier_support(), "</FONT>";
+	if ($self->get_tier_support()) {
+		print CONF "&nbsp &nbsp promote tier after <FONT COLOR=#6666AA>", $self->get_tier_promote(), "</FONT> notifications";
+	}
+	print CONF "<BR>&nbsp;<BR>\n";
 
 	print CONF "<B>current tier</B>: <FONT COLOR=#6666AA>", $self->get_current_tier(), "</FONT>";
 	print CONF "<BR>\n";
@@ -1577,7 +1586,7 @@ sub write_agent_html
 	print CONF "<BR>\n";
 	print CONF "<B>notify cap</B>: <FONT COLOR=#6666AA>", $self->get_notify_cap(), "</FONT>";
 	print CONF "<BR>&nbsp;<BR>\n";
-	print CONF "<B>errlev_reset</B>: <FONT COLOR=#AA4444>", $self->get_errlev_reset(), "</FONT>";
+	print CONF "<B>notify errlev_reset</B>: <FONT COLOR=#AA4444>", $self->get_notify_errlev_reset(), "</FONT>";
 	print CONF "<BR>\n";
 
 	print CONF "&nbsp;<BR>\n";
@@ -1614,8 +1623,8 @@ sub write_agent_html
 
 	# write agents index.html
 	#
-	open(HTML, ">$html_dir/agents/$ip/index.html") 
-		or penemo::core->notify_die("Can't open $html_dir/agents/$ip/index.html to write: $!\n"); 
+	open(HTML, ">$dir_html/agents/$ip/index.html") 
+		or penemo::core->notify_die("Can't open $dir_html/agents/$ip/index.html to write: $!\n"); 
 
 	print HTML "<HTML>\n"; 
 	print HTML "<HEAD>\n"; 
@@ -1630,13 +1639,13 @@ sub write_agent_html
 	print HTML "[<A HREF=\"conf.html\">current agent config</A>]  \n"; 
 	if ($self->snmp_check()) { 
 		my @mibs = split(/ /, $self->get_snmp_mibs());
-		if (-f "$html_dir/agentdump/$ip") {
-			system("rm $html_dir/agentdump/$ip");
+		if (-f "$dir_html/agentdump/$ip") {
+			system("rm $dir_html/agentdump/$ip");
 		}
 		foreach my $mib (@mibs) {
-			if (-f "$html_dir/agentdump/$ip") {
+			if (-f "$dir_html/agentdump/$ip") {
 			}
-			penemo::core->file_write(">>$html_dir/agentdump/$ip", $self->get_snmp_walk($mib));
+			penemo::core->file_write(">>$dir_html/agentdump/$ip", $self->get_snmp_walk($mib));
 		}
 		print HTML "[<A HREF=\"../../agentdump/$ip\">current snmp info</A>]<BR>\n"; 
 	} 
