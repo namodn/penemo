@@ -855,14 +855,17 @@ sub index_html_write {
 
 					print HTML "</TD>\n";
 					print HTML "<TD WIDTH=50 ALIGN=LEFT>\n";
-					print HTML "<FONT SIZE=2>\n";
 					if ($agent->get_paused()) {
-						print HTML "<FONT COLOR=\"#AAAADD\" SIZE=2><I>untill: ",
-							$agent->get_paused_end(), "<BR>\n";
-						print HTML "<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&unpause=1\">unpause</A></I><BR></FONT>\n"; 
+						print HTML "<FONT COLOR=#AAAADD SIZE=1><I>untill: ",
+							$agent->get_paused_end(), "</I></FONT><BR>\n";
+						print HTML "<FONT COLOR=#3366FF SIZE=1>";
+						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&unpause=1\">";
+						print HTML "<FONT COLOR=#4455FF SIZE=1>unpause</FONT></A>]</FONT><BR>\n"; 
 					}
 					else {
-						print HTML "<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&pause=1\">pause</A><BR>\n"; 
+						print HTML "<FONT COLOR=#3366FF SIZE=1>";
+						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&pause=1\">";
+						print HTML "<FONT COLOR=#4455FF SIZE=1>pause</FONT></A>]</FONT><BR>\n"; 
 					}
 					print HTML "</FONT>\n";
 					print HTML "</TD></TR>\n";

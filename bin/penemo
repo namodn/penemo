@@ -42,7 +42,7 @@ use penemo;
 my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
 my $agent_conf_file  = '/usr/local/etc/penemo/agent.conf';
 
-my $version = '1.0 beta2';
+my $version = '1.0 devel';
 my $date = `date`;
 my $date_string = &convert_date_to_string($date);
 
