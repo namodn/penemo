@@ -34,14 +34,18 @@ use IO::Handle;
 
 # penemo specific modules
 use lib '/home/nick/devel/penemo/modules/';
+#use lib '/usr/local/share/penemo/modules/';
 
 use penemo;
+
+my $penemo_conf_file = '/home/nick/devel/penemo/conf/penemo.conf';
+#my $penemo_conf_file = '/usr/local/etc/penemo/penemo.conf';
+my $agent_conf_file  = '/home/nick/devel/penemo/conf/agent.conf';
+#my $agent_conf_file  = '/usr/local/etc/penemo/agent.conf';
 
 my $version = '1.0';
 my $date = `date`;
 my $date_string = &convert_date_to_string($date);
-my $penemo_conf_file = '/home/nick/devel/penemo/conf/penemo.conf';
-my $agent_conf_file  = '/home/nick/devel/penemo/conf/agent.conf';
 
 print "penemo begin: $date";
 # create conf object
