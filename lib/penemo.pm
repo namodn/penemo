@@ -879,7 +879,7 @@ sub index_html_write {
 			foreach my $agent (@agentlist) { 
 				my $ip = $agent->get_ip();
 				if ($agent->get_group() eq "$group") { 
-					print HTML "<TR><TD WIDTH=150 ALIGN=LEFT>\n";
+					print HTML "<TR><TD WIDTH=125 ALIGN=LEFT>\n";
 					print HTML "<FONT SIZE=3 COLOR=\"#AAAAAA\">\n"; 
 					if ($agent->get_paused()) {
 						print HTML "$paused_light  ";
@@ -899,12 +899,24 @@ sub index_html_write {
 					print HTML "<A HREF=\"agents/$ip/index.html\">$ip</A><BR>\n";
 					print HTML "</FONT>\n";
 					print HTML "</TD>\n";
-					print HTML "<TD WIDTH=200 ALIGN=LEFT>\n";
+					if ( ($self->get_pause_web()) && ($self->get_pause_box_index()) ) {
+						print HTML "<TD WIDTH=175 ALIGN=LEFT>\n";
+					}
+					else {
+						print HTML "<TD WIDTH=200 ALIGN=LEFT>\n";
+					}
 					print HTML "<FONT SIZE=2 COLOR=#CCDDA><B>\n";
 					print HTML $agent->get_name();
 					print HTML "</B></FONT></FONT>\n"; 
 					print HTML "</TD>\n";
-					print HTML "<TD WIDTH=200 ALIGN=LEFT>\n";
+
+					if ( ($self->get_pause_web()) && ($self->get_pause_box_index()) ) {
+						print HTML "<TD WIDTH=150 ALIGN=LEFT>\n";
+					}
+					else {
+						print HTML "<TD WIDTH=225 ALIGN=LEFT>\n";
+					}
+
 					print HTML "<FONT SIZE=1 COLOR=#AAAADD>";
 					if ($agent->ping_check()) { print HTML " ping"; }
 					if ($agent->http_check()) { print HTML ", http"; }
@@ -919,17 +931,30 @@ sub index_html_write {
 					print HTML "</FONT><BR>\n";
 
 					print HTML "</TD>\n";
-					print HTML "<TD WIDTH=50 ALIGN=LEFT>\n";
-					if (($agent->get_paused()) && ($self->get_pause_web())) {
+					if ( ($self->get_pause_web()) && ($self->get_pause_box_index()) ) {
+						print HTML "<TD WIDTH=150 ALIGN=LEFT>\n";
+					}
+					else {
+						print HTML "<TD WIDTH=50 ALIGN=LEFT>\n";
+					}
+					
+					if ( (! $agent->get_paused()) && ($self->get_pause_web()) && ($self->get_pause_box_index()) ) {
+						print HTML "<FORM METHOD=\"Post\" action=\"/cgi-bin/penemo-admin.cgi\">\n";
+						print HTML '<INPUT TYPE=SUBMIT NAME=pause VALUE=', $ip, '><BR>', "\n";
+						print HTML '<FONT SIZE=2><FONT COLOR="#6666FF">pause format:</FONT> DD:HH:MM</FONT><BR>', "\n";
+						print HTML '<INPUT type=text name="time" size=10 maxlength=10><BR>', "\n";
+						print HTML '</FORM><BR>', "\n";
+					}
+					elsif (($agent->get_paused()) && ($self->get_pause_web())) {
 						print HTML "<FONT COLOR=#AAAADD SIZE=1><I>untill: ",
 							$agent->get_paused_end(), "</I></FONT><BR>\n";
 						print HTML "<FONT COLOR=#3366FF SIZE=1>";
-						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&unpause=1\">";
+						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?unpause=$ip\">";
 						print HTML "<FONT COLOR=#4455FF SIZE=1>unpause</FONT></A>]</FONT><BR>\n"; 
 					}
 					elsif ($self->get_pause_web()) {
 						print HTML "<FONT COLOR=#3366FF SIZE=1>";
-						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&pause=1\">";
+						print HTML "[<A HREF=\"$cgi_bin/penemo-admin.cgi?pause=$ip\">";
 						print HTML "<FONT COLOR=#4455FF SIZE=1>pause</FONT></A>]</FONT><BR>\n"; 
 					}
 					print HTML "</FONT>\n";
@@ -948,6 +973,7 @@ sub index_html_write {
 		print HTML "<CENTER>\n"; 
 		print HTML "\t<FONT SIZE=2><I>Developed by "; 
 		print HTML "<A HREF=mailto:nick\@namodn.com>Nick Jennings</A>"; 
+		print HTML "&nbsp;<BR>\n"; 
 		print HTML "</I></FONT></BR>\n"; 
 		print HTML "</CENTER>\n"; 
 		print HTML "</BODY>\n"; 

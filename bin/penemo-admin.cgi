@@ -13,7 +13,7 @@ my $agent_conf_file = '/usr/local/etc/penemo/agent.conf';
 
 my $conf = penemo::config->load_config($penemo_conf_file, $agent_conf_file);
 
-unless (param('agent')) {
+unless ( (param('pause')) || (param('unpause')) ) {
 	die "no agent specified\n";
 }
 
@@ -23,11 +23,11 @@ $date =~ s/\s+/ /g;   # takeout any double spaces
 my ($date_string, $date_delimited) = &convert_date_to_string();
 
 if (param('pause')) {
-	my $agent = param('agent');
+	my $agent = param('pause');
 	&pause($agent);
 }
 elsif (param('unpause')) {
-	my $agent = param('agent');
+	my $agent = param('unpause');
 	&unpause($agent);
 }
 else {
