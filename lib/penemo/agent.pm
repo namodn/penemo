@@ -832,7 +832,7 @@ sub write_agent_html
 		unless ($self->get_ping_status()) { 
 			$self->set_index_error_detected();
 			print HTML "<FONT COLOR=\"#AAAAAA\" SIZE=1><I>PING</I></FONT><BR>\n";
-			if ($self->get_on_notify_stack()) {
+			if ($self->have_notifications_been_sent()) {
 				print HTML "$bad_light\n";
 			}
 			else {
@@ -874,7 +874,7 @@ sub write_agent_html
 			}
 			else {
 				$self->set_index_error_detected();
-				if ($self->get_on_notify_stack()) {
+				if ($self->have_notifications_been_sent()) {
 					print HTML "$bad_light\n";
 				}
 				else {
@@ -891,7 +891,7 @@ sub write_agent_html
 		}
 		else { 
 			$self->set_index_error_detected();
-			if ($self->get_on_notify_stack()) {
+			if ($self->have_notifications_been_sent()) {
 				print HTML "$bad_light\n";
 			}
 			else {
@@ -918,7 +918,7 @@ sub write_agent_html
 			}
 			else {
 				$self->set_index_error_detected();
-				if ($self->get_on_notify_stack()) {
+				if ($self->have_notifications_been_sent()) {
 					print HTML "$bad_light\n";
 				}
 				else {
@@ -945,7 +945,7 @@ sub write_agent_html
 			}
 			else {
 				$self->set_index_error_detected();
-				if ($self->get_on_notify_stack()) {
+				if ($self->have_notifications_been_sent()) {
 					print HTML "$bad_light\n";
 				}
 				else {

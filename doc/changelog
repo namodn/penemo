@@ -3,6 +3,11 @@ penemo changelog
 changes from version 1.0 -> 1.0.1
 	* minor corrections to some code
 	* minor corrections and additions to documentation
+	* changed color reporting, so an agent is yellow when there is
+	  an error, but it's hasn't sent a notification yet (i.e. below
+	  the notify level). The agent turns (and stays) red once a 
+	  notification has been sent, until the errors resolved, then
+	  it turns back to green.
 
 changes from version 1.0 BETA3 -> 1.0 (stable)
 	* revamped the plugin architecure, uses .pm files now.

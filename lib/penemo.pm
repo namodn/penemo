@@ -816,7 +816,7 @@ sub index_html_write {
 						print HTML "$paused_light  ";
 					}
 					elsif ($agent->get_index_error_detected()) { 
-						if ($agent->get_on_notify_stack()) {
+						if ($agent->have_notifications_been_sent()) {
 							print HTML "$bad_light\n";
 						}
 						else {
@@ -849,6 +849,9 @@ sub index_html_write {
 					}
 
 					print HTML "<FONT SIZE=1 COLOR=#AAAADD>";
+
+					# color code the following. for quick stats
+					#
 					if ($agent->ping_check()) { print HTML " ping"; }
 					if ($agent->http_check()) { print HTML ", http"; }
 					if ($agent->snmp_check()) { 
