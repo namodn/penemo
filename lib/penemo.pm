@@ -1569,16 +1569,45 @@ sub write_agent_html
 
 	#print CONF "tier support: <FONT COLOR=#6666AA>", # not agent value yet.
 
-	print CONF "<B>current tier</B>: <FONT COLOR=#6666AA>", $self->get_current_tier(), "</FONT>, ";
+	print CONF "<B>current tier</B>: <FONT COLOR=#6666AA>", $self->get_current_tier(), "</FONT>";
 	print CONF "<BR>\n";
-	print CONF "<B>notifications sent</B>: <FONT COLOR=#6666AA>", $self->get_notifications_sent(), "</FONT>, ";
+	print CONF "<B>notifications sent</B>: <FONT COLOR=#6666AA>", $self->get_notifications_sent(), "</FONT>";
 	print CONF "<BR>\n";
-	print CONF "<B>notify_level</B>: <FONT COLOR=#6666AA>", $self->get_notify_level(), "</FONT>, ";
+	print CONF "<B>notify level</B>: <FONT COLOR=#6666AA>", $self->get_notify_level(), "</FONT>";
 	print CONF "<BR>\n";
-	print CONF "<B>notify_cap</B>: <FONT COLOR=#6666AA>", $self->get_notify_cap(), "</FONT>, ";
+	print CONF "<B>notify cap</B>: <FONT COLOR=#6666AA>", $self->get_notify_cap(), "</FONT>";
 	print CONF "<BR>&nbsp;<BR>\n";
-	print CONF "<B>errlev_reset</B>: <FONT COLOR=#AA4444>", $self->get_errlev_reset(), "</FONT>, ";
+	print CONF "<B>errlev_reset</B>: <FONT COLOR=#AA4444>", $self->get_errlev_reset(), "</FONT>";
 	print CONF "<BR>\n";
+
+	print CONF "&nbsp;<BR>\n";
+	print CONF "<B>Tier 1</B><BR>";
+	print CONF "&nbsp &nbsp <I>notify method</I>: <FONT COLOR=#6666AA>", $self->get_notify_method_1(), "</FONT>";
+	if ($self->get_notify_method_1() eq 'email') {
+		print CONF " <B>:</B> <FONT COLOR=#6666AA>", $self->get_notify_email_1(), "</FONT><BR>";
+	}
+	else {
+		# exec
+	}
+	print CONF "&nbsp;<BR>\n";
+	print CONF "<B>Tier 2</B><BR>";
+	print CONF "&nbsp &nbsp <I>notify method</I>: <FONT COLOR=#6666AA>", $self->get_notify_method_2(), "</FONT>";
+	if ($self->get_notify_method_1() eq 'email') {
+		print CONF " <B>:</B> <FONT COLOR=#6666AA>", $self->get_notify_email_2(), "</FONT><BR>";
+	}
+	else {
+		# exec
+	}
+	print CONF "&nbsp;<BR>\n";
+	print CONF "<B>Tier 3</B><BR>";
+	print CONF "&nbsp &nbsp <I>notify method</I>: <FONT COLOR=#6666AA>", $self->get_notify_method_3(), "</FONT>";
+	if ($self->get_notify_method_1() eq 'email') {
+		print CONF " <B>:</B> <FONT COLOR=#6666AA>", $self->get_notify_email_3(), "</FONT><BR>";
+	}
+	else {
+		# exec
+	}
+
 
 	print CONF "</BODY></HTML>\n";
 	close CONF;

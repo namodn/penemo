@@ -8,8 +8,11 @@ changes from version 0.7 to 1.0
            everyone know the problem is resolved.  
         * check funtion for plugins.  
         * extensive pausing features 
-        * yellow light for when an error is detected yet a notification is not 
-	   being sent.  
+	* notify_cap (specifies the cap at which to stop sending notifications).
+	* html display for the configuration options set for each agent (link 
+	   from detailed agent display).
+        * yellow 'warning' light for when an error is detected yet a notification 
+	   is not being sent.  
 	* lots more. too numerous to list.
 
 changes from version 0.6 to 0.7

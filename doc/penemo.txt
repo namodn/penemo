@@ -7,7 +7,7 @@ by: Nick Jennings, nick@namodn.com
 INTRODUCTION
 
  penemo is a remote monitoring program, written in perl. It is designed to 
- impliment a number of check features such as ping, http, and snmp. A plugin
+ implement a number of check features such as ping, http, and snmp. A plugin
  method has been designed to allow you to add different snmp mibs to check
  as well as a more generic plugin method so that you can write your own
  script to check whatever you want and return certain values to let penemo
