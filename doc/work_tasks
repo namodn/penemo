@@ -33,12 +33,14 @@
 
 [x] quick list of checks on main page after name
 
+[x] config viewing from web
+
+
 
 [-] notify_exec (pain in the ass)
     (note: try notify_exec_name to group by, instead of actual notify_exec)
 
 
-[!] config viewing from web
 
 [!] command line parameters
 
