@@ -3,10 +3,7 @@
 
 ##################################
 ##################################
-##################################
 ## the agent class.
-##
-####
 ####
 ####
 
@@ -45,6 +42,7 @@ sub new {
                         snmp_mibs	=> $args{snmp_mibs},
 			plugin_check	=> $args{plugin_check},
                         plugin_mods	=> $args{plugin_mods},
+                        plugin_conf	=> $args{plugin_conf},
                         group		=> $args{group},
 			notify_method_1	=> $args{notify_method_1},
 			notify_method_2	=> $args{notify_method_2},
@@ -311,6 +309,19 @@ sub get_plugin_message {
 }
 sub get_plugin_errlev           { $_[0]->{plugin_errlev} }
 sub get_plugin_mods		{ $_[0]->{plugin_mods} }
+sub get_plugin_conf { 
+	my ($self, $plug) = @_;
+	foreach my $key (keys  %{$self->{plugin_conf}} ) {
+		if ($key =~ /^$plug\_/) {
+			$return{$key} = $self->{plugin_conf}{$key};
+		}
+	}
+	
+	if (%return) {
+		return %return;
+	}
+}
+
 sub get_notify_errlev_reset	{ $_[0]->{notify_errlev_reset} }
 sub get_error_detected		{ $_[0]->{error_detected} }
 sub get_index_error_detected	{ $_[0]->{index_error_detected} }
@@ -589,10 +600,16 @@ sub plugin {
 	my $error_detected = 0;
 	
 	foreach my $mod (@mods) {
+		my $conflist = '';
+		if ($self->get_plugin_conf($mod)) {
+			my %mod_conf = $self->get_plugin_conf($mod);
+			$conflist = join('=', %mod_conf);
+		}
 		require "penemo/agent/$mod.pm";
 		my $plugin = "penemo::agent::$mod"->new(
 						mod => $mod,
 						ip => $ip,
+						conf => $conflist,
 						dir_plugin => $dir_plugin,
 		);
 

@@ -28,13 +28,9 @@
 #
 
 
-
-############################
 ############################
 ############################
 ## core utilities
-##
-####
 ####
 ####
 
@@ -120,10 +116,7 @@ sub notify_die {
 
 #############################
 #############################
-#############################
 ## the config class
-##
-####
 ####
 ####
 
@@ -286,7 +279,7 @@ sub _agent_config {
                 }
 
                 if ($line =~ /^}\s*/) {
-                        $ip = '';
+			undef $ip;
                         $begin = 0;
 			next;
                 }
@@ -314,33 +307,15 @@ sub _agent_config {
 			&_agent_params(\%conf, $ip, 'notify', $line);
 		}
 		elsif ($line =~ /^\s*PLUGIN\s{1}/i) {
-			#&_agent_params(\%conf, $ip, 'plugin', $line);
-
-        		my $conf_ref = \%conf;
-			my $func = 'plugin';
-       			$line =~ s/^\s*$func\s*//img;
-        		return unless ($line);
-        		my @tmp = split(/"\s*/, $line);
-        		while (@tmp) {
-        		        my $param = shift @tmp;
-        		        $param =~ s/=//mg;
-        		        $param =~ tr/A-Z/a-z/;
-                		my $value = shift @tmp;
-				unless ($param =~ /^mods$/) {
-					my $conf_ref2 = %$conf_ref;
-					if ($param =~ /_/) {
-						my ($plugtype, $param) = split(/_/, $param);
-						$conf_ref2->{$ip}{"plugin_conf"}{$plugtype}{$param} = $value;
-					}
-				}
-				else {
-					$func = $func . '_' . $param;
-        		        	$conf_ref->{$ip}{$func} = $value;
-				}
-       			}
+			my $plugin_conf = $line;
+			$plugin_conf =~ s/mods=\".*?\"//;
+			&_agent_params(\%conf, $ip, 'plugin', $line);
+			&_agent_params_plugin(\%conf, $ip, 'plugin_conf', $plugin_conf);
+	
 			if ($conf{$ip}{plugin_mods}) {
 				$conf{$ip}{plugin_check} = '1';
 			}
+		
 		}
 		elsif ($line =~ /^\s*TIER\s{1}/i) {
 			&_agent_params(\%conf, $ip, 'tier', $line);
@@ -363,6 +338,21 @@ sub _agent_params {
                 my $value = shift @tmp;
 		my $func = $func . '_' . $param;
                 $conf_ref->{$ip}{$func} = $value;
+        }
+}
+
+# plugin specific assignments
+sub _agent_params_plugin {
+        my ($conf_ref, $ip, $func, $line) = @_;
+        $line =~ s/^\s*plugin\s*//img;
+        return unless ($line);
+        my @tmp = split(/"\s*/, $line);
+        while (@tmp) {
+                my $param = shift @tmp;
+                $param =~ s/=//mg;
+                $param =~ tr/A-Z/a-z/;
+                my $value = shift @tmp;
+                $conf_ref->{$ip}{$func}{$param} = $value;
         }
 }
 
@@ -465,10 +455,16 @@ sub _plugin_mods {
 	my ($self, $ip) = @_;
 	$self->{$ip}{plugin_mods};
 }
+
 sub _plugin_conf {
 	my ($self, $ip) = @_;
-	$self->{$ip}{plugin_conf};
+	if ($self->{$ip}{plugin_conf}->{filecheck_test}) {
+		#print "FUCK $ip: ", $self->{$ip}{plugin_conf}->{filecheck_test}, ".\n";
+	}
+
+	return %{$self->{$ip}{plugin_conf}};
 }
+
 sub _notify_errlev_reset {
 	my ($self, $ip) = @_;
 	$self->{$ip}{notify_errlev_reset};
@@ -528,7 +524,7 @@ sub get_next_agent {
 					snmp_mibs	=> $self->_snmp_mibs($ip), 
 					plugin_check	=> $self->_plugin_check($ip),
 					plugin_mods	=> $self->_plugin_mods($ip),
-					plugin_conf	=> $self->_plugin_conf($ip),
+					plugin_conf	=> { $self->_plugin_conf($ip) },
 					group		=> $self->_group($ip),
 					notify_method_1	=> $self->_notify_method_1($ip),
 					notify_method_2	=> $self->_notify_method_2($ip),
@@ -926,10 +922,7 @@ sub index_html_write {
 
 ###################
 ###################
-###################
 ## notify class
-##
-####
 ####
 ####
 

@@ -37,6 +37,7 @@ use IO::Handle;
 
 # penemo specific modules
 use lib '/usr/local/share/penemo/lib/';
+use diagnostics;
 
 use penemo;
 

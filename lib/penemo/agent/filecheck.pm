@@ -50,6 +50,7 @@ sub new {
 		status	    => '',
 		html	    => '',
 		dir_plugin  => $args{dir_plugin},
+		conf        => $args{conf},
 #		agent_ref   => $args{agent_ref},
 	};
 
@@ -62,6 +63,25 @@ sub new {
 sub _get_dir_plugin { $_[0]->{dir_plugin} }
 sub _get_mod { $_[0]->{mod} }
 sub _get_ip { $_[0]->{ip} }
+sub _get_conf { 
+	my ($self, $key) = @_;
+	if ($self->{conf}) {
+		my %hash = ( split(/=/, $self->{conf}) );
+
+		if ($hash{$key}) {
+			return ($hash{$key});
+		}
+		else {
+			return (0);
+		}
+	}
+	else {
+		return (0);
+	}
+
+}
+
+
 
 # external methods.
 #
@@ -73,6 +93,10 @@ sub exec {
 	my $self = shift;
 	#my $dir_plugin = $self->_get_dir_plugin() . "/check";
 	#my $mod = $self->_get_mod();
+	my $test = $self->_get_conf('filecheck_test');
+	if ($test) {
+		print "CONFTEST: $test\n";
+	}
 	my $ip = $self->_get_ip();
 	my @output = ();
 	my $ok_light = penemo::core->html_image('agent', 'ok');
