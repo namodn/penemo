@@ -13,8 +13,8 @@
    do it. Just study the filecheck.pm and mimick it's methods. They must have 
    the following methods in them: 
    
-         new (for creating the object for penemo to use). It will pass the 
-	     following values in a hash table: 
+         new : (for creating the object for penemo to use). It will pass the 
+	       following values in a hash table: 
 	     
 	         ip   : (ip address of the agent)
 	         mod  : (name of the plugin, just
@@ -22,6 +22,32 @@
 	         conf : (an array of key=pair values). Do a 
                          my %conf = split(/=/, $self->{conf}); 
 		         to get the values into a local hash.
+         
+	 exec : penemo calls this method when it's ready to actually run
+	        the check, the work is done within this function, invisible
+		to penemo. the following methods are called after exec is
+		run, they should contain result info.
+
+	status : reports the result of the exec. returns a 0 (false) for bad, 
+	         and a 1 (true) for good
+
+	message : returns the message relating to the status if it was
+		  a bad check, this message will be sent to the pager, and
+		  printed in red on the web statistics. 
+
+	html : if message was good, this will be the html that is printed on
+	       the webpage, enter full html entry for the check (i.e. color,
+	       embeded images if any. 
+
+
+   It is very important to use the filecheck.pm as an example, mimick it 
+   whenever there is question on what to do in a circumstance.
+
+   If you have any question, comments, or suggestions on how to improve
+   the plugin design. PLEASE email me: nick@namodn.com, and perhaps join
+   the penemo users (users@penemo.org) or devel (devel@penemo.org) lists.
+   
+
 
 
 

@@ -153,8 +153,10 @@ foreach my $agent (@agents) {
 	}
 
 	# write agent html
-	print "  $aid: writing agents html file.\n";
-	$agent->write_agent_html( $conf->get_dir_html() );
+	if ($conf->get_html_write()) {
+		print "  $aid: writing agents html file.\n";
+		$agent->write_agent_html( $conf->get_dir_html() );
+	}
 
 	# add to list of agents for index html
 	$conf->push_html_agentlist($agent);
@@ -166,9 +168,11 @@ foreach my $agent (@agents) {
 # print total agents loaded
 print "total agents created  : ", penemo::agent->get_total_count(), "\n";
 
-# writing index.html for agent
-print "writing index html data.\n";
-$conf->index_html_write($version, $date);
+if ($conf->get_html_write()) {
+	# writing index.html for agent
+	print "writing index html data.\n";
+	$conf->index_html_write($version, $date);
+}
 
 
 ## begin notification stuff

@@ -172,7 +172,6 @@ sub _default_config
 		dir_cache       => '/usr/local/share/penemo/cache',
 		dir_data	=> '/usr/local/share/penemo/data',
 		dir_ucd_bin     => '/usr/local/bin',
-		dir_plugin	=> '/usr/local/share/penemo/plugins',
 		dir_log		=> '/usr/local/share/penemo/logs',
 		dir_cgibin	=> '/cgi-bin',
 		dir_exec	=> '/usr/local/share/penemo/exec',
@@ -183,6 +182,7 @@ sub _default_config
 		pause_box_index => '0',
 		pause_web       => '1',
 		pause_global    => '0',
+		html_write	=> '1',
 	);
 	open(CFG, "$conf_file")
 	            or penemo::core->notify_die("Can't open $conf_file : $!\n");
@@ -237,7 +237,6 @@ sub _default_config
 			dir_html        => $conf{dir_html},
 			dir_cache       => $conf{dir_cache},
 			dir_data	=> $conf{dir_data},
-			dir_plugin	=> $conf{dir_plugin},
 			dir_exec	=> $conf{dir_exec},
 			dir_log		=> $conf{dir_log},
 			dir_cgibin	=> $conf{dir_cgibin},
@@ -246,6 +245,7 @@ sub _default_config
 			pause_web       => $conf{pause_web},
 			pause_box_index => $conf{pause_box_index},
 			pause_global    => $conf{pause_global},
+			html_write	=> $conf{html_write},
 		},
 	);
    
@@ -372,7 +372,6 @@ sub _agent_params_plugin {
 sub get_dir_html                { $_[0]->{default}{dir_html} }
 sub get_dir_cache               { $_[0]->{default}{dir_cache} }
 sub get_dir_data		{ $_[0]->{default}{dir_data} }
-sub get_dir_plugin		{ $_[0]->{default}{dir_plugin} }
 sub get_dir_exec		{ $_[0]->{default}{dir_exec} }
 sub get_dir_log			{ $_[0]->{default}{dir_log} }
 sub get_dir_cgibin		{ $_[0]->{default}{dir_cgibin} }
@@ -383,6 +382,7 @@ sub get_instance_name		{ $_[0]->{default}{instance_name} }
 sub get_pause_web		{ $_[0]->{default}{pause_web} }
 sub get_pause_box_index		{ $_[0]->{default}{pause_box_index} }
 sub get_pause_global		{ $_[0]->{default}{pause_global} }
+sub get_html_write		{ $_[0]->{default}{html_write} }
 
 sub _next_agent {
 	my @agent_list = split (/ /, $_[0]->{agent_list});

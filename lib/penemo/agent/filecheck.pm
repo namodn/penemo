@@ -46,11 +46,10 @@ sub new {
 	my $ref = {
 		ip	    => $args{ip},
 		mod	    => $args{mod},
+		conf        => $args{conf},
 		message	    => '',
 		status	    => '',
 		html	    => '',
-		conf        => $args{conf},
-#		agent_ref   => $args{agent_ref},
 	};
 
 	bless $ref, $class;
@@ -102,17 +101,14 @@ sub exec {
 
 	my $ip = $self->_get_ip();
 	my @output = ();
-	my $ok_light = penemo::core->html_image('agent', 'ok');
-	my $bad_light = penemo::core->html_image('agent', 'bad');
 	
 	if (-f "$file") { 
 		$self->{status} = "1"; 
-		$self->{html} = "$ok_light <FONT COLOR=\"#11AA11\">the file: $file exists.</FONT><BR>\n"; 
+		$self->{html} = "<FONT COLOR=\"#11AA11\">the file: $file exists.</FONT><BR>\n"; 
 	} 
 	else { 
 		$self->{status} = "0"; 
 		$self->{message} = "filecheck: the file $file does not exists.\n"; 
-		$self->{html} = "$bad_light <FONT COLOR=\"#AAAAAA\">filecheck: the file: $file does not exists.</FONT><BR>\n"; 
 	}      
 
 	return;

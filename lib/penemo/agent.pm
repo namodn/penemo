@@ -584,7 +584,7 @@ sub http {
 
 # snmp polling function.
 sub snmp {
-        my ($self, $dir_plugin, $dir_ucd_bin) = @_;
+        my ($self, $dir_ucd_bin) = @_;
         my $ip        = $self->get_ip;
 	my $community = $self->get_snmp_community();
 	my (@mibs) = split(/\s+/, $self->get_snmp_mibs());
@@ -624,7 +624,7 @@ sub snmp {
 
 # plugin module execution function.
 sub plugin {
-        my ($self, $dir_plugin) = @_;
+        my $self = shift;
         my $ip        = $self->get_ip;
 	my (@mods) = split(/ /, $self->get_plugin_mods());
 	my $error_detected = 0;
@@ -640,7 +640,6 @@ sub plugin {
 						mod => $mod,
 						ip => $ip,
 						conf => $conflist,
-			#			dir_plugin => $dir_plugin,
 		);
 
 		$plugin->exec();
@@ -652,7 +651,7 @@ sub plugin {
 		}
 		else {
 			$self->_set_plugin_status($mod, '1');
-			$self->_set_plugin_message($mod, $plugin->message());
+			#$self->_set_plugin_message($mod, $plugin->message());
 			$self->_set_plugin_html($mod, $plugin->html());
 		}
 	}
@@ -942,7 +941,7 @@ sub write_agent_html
 
 		foreach my $mod (@mods) {
 			if ($self->get_plugin_status($mod)) {
-				print HTML $self->_print_plugin_html($mod);
+				print HTML "$ok_light ", $self->_print_plugin_html($mod);
 			}
 			else {
 				$self->set_index_error_detected();
