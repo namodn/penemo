@@ -269,7 +269,7 @@ sub snmp_check {
 
 	if ($agent->snmp_check()) {
 		print "  $aid: snmp status  : "; 
-		$agent->snmp($conf->get_dir_plugin(), $conf->get_dir_ucd_bin());
+		$agent->snmp($conf->get_dir_ucd_bin());
 
 		my @snmp_mibs = split(/ /, $agent->get_snmp_mibs());
 		my $snmp_errlev = 1;
@@ -302,7 +302,7 @@ sub plugin_check {
 
 	if ($agent->plugin_check()) {
 		print "  $aid: plugin status  : "; 
-		$agent->plugin($conf->get_dir_plugin());
+		$agent->plugin();
 
 		my @plugin_mods = split(/ /, $agent->get_plugin_mods());
 		my $plugin_errlev = 1;
