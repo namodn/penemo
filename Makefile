@@ -7,7 +7,7 @@ PERMS_DOC=777
 LIB=share/penemo/lib
 PERMS_LIB=777
 
-TMPL=share/penemo/templates
+HTML=share/penemo/html
 PERMS_TMPL=777
 
 BIN=bin
@@ -40,9 +40,9 @@ inst-lib:
 	cp -rp lib/* $(PREFIX)/$(LIB)/
 
 inst-tmpl:
-	echo "Installing templates..."
-	./mkdirto.pl $(PERMS_TMPL) $(PREFIX)/$(TMPL)
-	cp -rp templates/* $(PREFIX)/$(TMPL)/
+	echo "Installing html files..."
+	./mkdirto.pl $(PERMS_TMPL) $(PREFIX)/$(HTML)
+	cp -rp html/* $(PREFIX)/$(HTML)/
 
 inst-bin:
 	echo "Installing penemo binary..."
