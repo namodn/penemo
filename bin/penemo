@@ -39,6 +39,7 @@ use penemo;
 
 my $version = '1.0';
 my $date = `date`;
+my $date_string = &convert_date_to_string($date);
 my $penemo_conf_file = '/home/nick/devel/penemo/conf/penemo.conf';
 my $agent_conf_file  = '/home/nick/devel/penemo/conf/agent.conf';
 
@@ -70,6 +71,23 @@ foreach my $agent (@agents) {
 
 	print "\t\tnotify_level: ", $agent->get_notify_level(),
 		", errlev_reset: ", $agent->get_errlev_reset(), "\n";
+
+	if ($agent->get_paused()) {
+		if ($agent->get_paused_end <= $date_string) {
+			print "  $ip: time to unpause agent.\n";
+			$agent->set_paused('0');
+			$agent->set_paused_end('000000000000');
+		}
+		else {
+			print "  $ip: agent is paused, skipping.\n";
+			$conf->push_html_agentlist($agent);
+			next;
+		}
+	}
+	else {
+		$agent->set_paused('0');
+		$agent->set_paused_end('000000000000');
+	}	
 
 	# perform check functions
 	&ping_check($agent);
@@ -325,3 +343,32 @@ sub add_to_notify_stack {
 	$conf->push_notification_stack($agent);
 	$agent->set_have_notifications_been_sent('1');
 }
+
+
+sub convert_date_to_string {
+	my $date = shift;               # Format is 'Thu Jan 13 09:39:40 2000'
+	my @date = split (/\s/, $date); # Split on whitespace
+	my ($month, $day, $time, $year) = ($date[1], $date[2], $date[3], $date[5]);
+	$month = convert_month($month);
+	my ($hour, $minutes, $seconds) = split(/:/, $time);
+	print "$year$month$day$hour$minutes\n";
+	return ("$year$month$day$hour$minutes");
+}
+
+sub convert_month {
+	my $month = shift;
+	if	($month =~ /^Jan$/)	{ $month = '01'; }	
+	elsif	($month =~ /^Feb$/)	{ $month = '02'; }	
+	elsif	($month =~ /^Mar$/)	{ $month = '03'; }	
+	elsif	($month =~ /^Apr$/)	{ $month = '04'; }	
+	elsif	($month =~ /^May$/)	{ $month = '05'; }	
+	elsif	($month =~ /^Jun$/)	{ $month = '06'; }	
+	elsif	($month =~ /^Jul$/)	{ $month = '07'; }	
+	elsif	($month =~ /^Aug$/)	{ $month = '08'; }	
+	elsif	($month =~ /^Sep$/)	{ $month = '09'; }	
+	elsif	($month =~ /^Oct$/)	{ $month = '10'; }	
+	elsif	($month =~ /^Nov$/)	{ $month = '11'; }	
+	elsif	($month =~ /^Dec$/)	{ $month = '12'; }	
+	return ($month);
+}
+

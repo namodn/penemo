@@ -688,6 +688,7 @@ sub index_html_write {
 	my $line = '';
 	my $ok_light = penemo::core->html_image('index', 'ok'); 
 	my $bad_light = penemo::core->html_image('index', 'bad'); 
+	my $paused_light = penemo::core->html_image('index', 'pause'); 
 	my $max_ip_length = 0;
 
 	foreach my $ref (@agentlist) {
@@ -732,7 +733,10 @@ sub index_html_write {
 				if ($agent->get_group() eq "$group") { 
 					print HTML "<TR><TD WIDTH=150 ALIGN=LEFT>\n";
 					print HTML "<FONT SIZE=3 COLOR=\"#AAAAAA\">\n"; 
-					if ($agent->get_index_error_detected()) { 
+					if ($agent->get_paused()) {
+						print HTML "$paused_light  ";
+					}
+					elsif ($agent->get_index_error_detected()) { 
 						print HTML "$bad_light  ";
 					} 
 					else { 
@@ -747,7 +751,13 @@ sub index_html_write {
 					print HTML "</TD>\n";
 					print HTML "<TD WIDTH=50 ALIGN=LEFT>\n";
 					print HTML "<FONT SIZE=2>\n";
-					print HTML "<A HREF=\"/cgi-bin/penemo-admin.cgi?agent=$ip&pause=1\">pause</A><BR>\n"; 
+					if ($agent->get_paused()) {
+						print HTML "<FONT COLOR=\"#AAAADD\" SIZE=2><I>untill: ", $agent->get_paused_end(), "<BR>\n";
+						print HTML "<A HREF=\"/cgi-bin/penemo-admin.cgi?agent=$ip&unpause=1\">unpause</A></I><BR></FONT>\n"; 
+					}
+					else {
+						print HTML "<A HREF=\"/cgi-bin/penemo-admin.cgi?agent=$ip&pause=1\">pause</A><BR>\n"; 
+					}
 					print HTML "</FONT>\n";
 					print HTML "</TD></TR>\n";
 				} 
@@ -855,6 +865,8 @@ sub new {
 			notifications_sent	=> '0',
 			error_resolved		=> '0',
 			have_notifications_been_sent	=> '0',
+			paused			=> '',
+			paused_end		=> '',
         }, $class;
 	
         $self->_incr_count();
@@ -879,6 +891,9 @@ sub load_persistent_data {
 		$self->set_plugin_errlev($data[3]);
 		$self->set_current_tier($data[4]);
 		$self->set_notifications_sent($data[5]);
+		$self->set_paused($data[6]);
+		$self->set_paused_end($data[7]); 	# YYYYMMDDHHMM - the time when the agent unpauses.
+
 print "\t\terror_levels: ping=$data[0], http=$data[1], snmp=$data[2] plugin=$data[3]\n";
 print "\t\tcurrent_tier: $data[4], notifications_sent: $data[5]\n";
 	}
@@ -901,9 +916,11 @@ sub write_persistent_data {
 	my $plugin_errlev = $self->get_plugin_errlev();
 	my $current_tier = $self->get_current_tier();
 	my $notifications_sent = $self->get_notifications_sent();
+	my $paused = $self->get_paused();
+	my $paused_end = $self->get_paused_end();
 	
 	open (DATA, ">$data_dir/$ip") or penemo::core->notify_die("Can't open $data_dir/$ip: $!\n");
-		print DATA "$ping_errlev\t$http_errlev\t$snmp_errlev\t$plugin_errlev\t$current_tier\t$notifications_sent\n";
+		print DATA "$ping_errlev\t$http_errlev\t$snmp_errlev\t$plugin_errlev\t$current_tier\t$notifications_sent\t$paused\t$paused_end\n";
 	close DATA;
 }
 
@@ -948,6 +965,18 @@ sub get_error_resolved		{ $_[0]->{error_resolved} }
 sub set_error_resolved {
 	my ($self, $set) = @_;
 	$self->{error_resolved} = $set;
+}
+# pausing functions
+sub get_paused		{ $_[0]->{paused} }
+sub set_paused { 
+	my ($self, $set) = @_;
+	$self->{paused} = $set; 
+}
+# value is YYYYMMDDHHMM -- the date the agent will unpause.
+sub get_paused_end	{ $_[0]->{paused_end} }
+sub set_paused_end { 
+	my ($self, $set) = @_;
+	$self->{paused_end} = $set; 
 }
 
 # methods to check whether a poll on an agent was succesfull.

@@ -21,6 +21,8 @@
 
 [-] extensive pausing features
 
+[-] snmp mibs dont have a way to notify on snmp alerts within mib check.
+
 
 [!] make it so notifications reset <type>_errlev, so that there arent
       overlapping counts from different checks in same agent, resulting
@@ -30,5 +32,4 @@
 
 [!] make http its own obj, or something, impliment multi-http checks.
 
-[!] snmp mibs dont have a way to notify on snmp alerts within mib check.
 
