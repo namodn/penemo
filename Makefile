@@ -36,6 +36,7 @@ inst-doc:
 
 inst-lib:
 	echo "Installing libraries..."
+	./updatelibdir.pl $(PREFIX)/$(LIB) lib/
 	./mkdirto.pl $(PERMS_LIB) $(PREFIX)/$(LIB)
 	cp -rp lib/* $(PREFIX)/$(LIB)/
 
@@ -46,6 +47,7 @@ inst-tmpl:
 
 inst-bin:
 	echo "Installing penemo binary..."
+	./updatelibdir.pl $(PREFIX)/$(LIB) bin/
 	./mkdirto.pl $(PERMS_BIN) $(PREFIX)/$(BIN)
 	cp -rp bin/penemo $(PREFIX)/$(BIN)
 	#chown root:root $(PREFIX)/$(BIN)/penemo
