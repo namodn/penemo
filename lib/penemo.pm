@@ -1960,13 +1960,19 @@ sub email {
 		print MAIL "\n"; 
 		print MAIL "  penemo $version\n"; 
 		print MAIL "\n"; 
-		print MAIL @msg, "\n"; 
+		foreach my $line (@msg) {
+			print MAIL "$line\n"; 
+		}
 		print MAIL "\n"; 
 		print MAIL "tier level: ", $self->_get_current_tier(), "\n";
 		print MAIL "tier email: $to\n";
 	close MAIL; 
 
-	print "--\n", @msg; 
+	print "--\n"; 
+	foreach my $line (@msg) {
+		print "$line\n"; 
+	}
+	print "\n";
 	print "tier level: ", $self->_get_current_tier(), "\n";
 	print "tier email: $to\n";
 	print "--\n";
