@@ -2,9 +2,12 @@ penemo changelog
 
 
 changes from version 1.0 BETA3 -> 1.0 (stable)
-	* revamped the plugin architecure, uses .pm files now. 
+	* revamped the plugin architecure, uses .pm files now.
 	* you can now pass config options to the plugins through the
-	  agent.conf (view the plugins.txt for more details).
+	  agent.conf (view the plugins.txt for more details). The plugins
+	  that can be developed (and have been) will be able to be
+	  improved incredibly. Look for inclusions of some of them in
+	  the next release hopefully.
 	* fixed notify_exec now, should work. Use it as you would notify_email.
 	# added pause functionality configuration, you can now move the pause
 	  function to the main page (less clicks).
@@ -13,6 +16,11 @@ changes from version 1.0 BETA3 -> 1.0 (stable)
 	  cgi execution, so anyone who clicks pause will have to have a
 	  login).
 	* several bugfixes too numerous to list.
+	* several additional features, the release of penemo would be
+	  delayed even further if I was to sit down and try to list them
+	  all. Check out the penemo.conf that comes with the dist and
+	  check out all the new options, that should give you an idea,
+	  along with the agent.conf
 	
 
 changes from version 1.0 BETA2 -> 1.0 BETA3
@@ -41,7 +49,8 @@ changes from version 0.7 -> 1.0 BETA1
            everyone know the problem is resolved.  
         * check funtion for plugins.  
         * extensive pausing features 
-	* images instead of colored '*' for warning LED's (thanks to Mike Tuller)
+	* images instead of colored '*' for warning LED's (thanks to Mike 
+	  Tuller)
 
 
 changes from version 0.6 -> 0.7
