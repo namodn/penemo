@@ -1,6 +1,6 @@
 # current tasks to get to
 #
-# [!]: need to do  [-]: working on it  [x]: complete
+# [!]: need to do  [-]: working on it  [x]: complete  [?]: when i have the time
 #
 
 
@@ -8,9 +8,10 @@
       tier1 emails="emails,emails" increment=(3 bad checks)
       tier2 emails="emails,emails" increment=(3 bad checks)
       tier3 emails="emails" increment=(2 bad checks)
-      - impliment, "resolved" notification. send page to whatever 
-        tier it was on, to let everyone know the problem is 
-        resolved. config option.
+
+[x] impliment, "resolved" notification. send page to whatever 
+      tier it was on, to let everyone know the problem is 
+      resolved. config option.
 
 [x] html output for agents and the index of agents.
 
@@ -30,6 +31,11 @@
 
 [!] make a history page for each agent.
 
-[!] make http its own obj, or something, impliment multi-http checks.
+
+[?] make http its own obj, or something, impliment multi-http checks.
+
+[?] it'd be nice to have some sort of informational page for agent history
+      that shows downtimes, durations, other misc stuff.
+
 
 
