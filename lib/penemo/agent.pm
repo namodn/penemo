@@ -81,7 +81,7 @@ sub new {
 			plugin_html		=> {},
 			error_detected		=> '',
 			index_error_detected	=> '',
-			notify_errlev_reset		=> $args{notify_errlev_reset},
+			notify_errlev_reset	=> $args{notify_errlev_reset},
 			current_tier		=> $args{current_tier},
 			notifications_sent	=> '0',
 			error_resolved		=> '0',
@@ -158,8 +158,8 @@ sub get_ip 			{ $_[0]->{ip} }
 sub get_name			{ $_[0]->{name} }
 sub get_group			{ $_[0]->{group} }
 sub get_notify_method_1		{ $_[0]->{notify_method_1} }
-sub get_notify_method_2		{ $_[0]->{notify_method_1} }
-sub get_notify_method_3		{ $_[0]->{notify_method_1} }
+sub get_notify_method_2		{ $_[0]->{notify_method_2} }
+sub get_notify_method_3		{ $_[0]->{notify_method_3} }
 sub get_notify_level		{ $_[0]->{notify_level} }
 sub get_notify_cap		{ $_[0]->{notify_cap} }
 sub get_notify_email_1		{ $_[0]->{notify_email_1} }

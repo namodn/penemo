@@ -175,6 +175,7 @@ sub _default_config
 		dir_plugin	=> '/usr/local/share/penemo/plugins',
 		dir_log		=> '/usr/local/share/penemo/logs',
 		dir_cgibin	=> '/cgi-bin',
+		dir_exec	=> '/usr/local/share/penemo/exec',
 		tier_support	=> '0',
 		tier_promote	=> '3',
 		instance_name	=> 'default instance',
@@ -214,9 +215,9 @@ sub _default_config
    		notify_email_1 	=> $conf{notify_email_1},
    		notify_email_2 	=> $conf{notify_email_2},
    		notify_email_3 	=> $conf{notify_email_3},
-		notify_exec_1   => $conf{notify_exec},
-		notify_exec_2   => $conf{notify_exec},
-		notify_exec_3   => $conf{notify_exec},
+		notify_exec_1   => $conf{notify_exec_1},
+		notify_exec_2   => $conf{notify_exec_2},
+		notify_exec_3   => $conf{notify_exec_3},
 		snmp_community  => $conf{snmp_community},
 		ping_timeout    => $conf{ping_timeout},
 		ping_ip		=> '',
@@ -237,6 +238,7 @@ sub _default_config
 			dir_cache       => $conf{dir_cache},
 			dir_data	=> $conf{dir_data},
 			dir_plugin	=> $conf{dir_plugin},
+			dir_exec	=> $conf{dir_exec},
 			dir_log		=> $conf{dir_log},
 			dir_cgibin	=> $conf{dir_cgibin},
 			dir_ucd_bin	=> $conf{dir_ucd_bin},
@@ -371,6 +373,7 @@ sub get_dir_html                { $_[0]->{default}{dir_html} }
 sub get_dir_cache               { $_[0]->{default}{dir_cache} }
 sub get_dir_data		{ $_[0]->{default}{dir_data} }
 sub get_dir_plugin		{ $_[0]->{default}{dir_plugin} }
+sub get_dir_exec		{ $_[0]->{default}{dir_exec} }
 sub get_dir_log			{ $_[0]->{default}{dir_log} }
 sub get_dir_cgibin		{ $_[0]->{default}{dir_cgibin} }
 sub get_penemo_bin              { $_[0]->{default}{penemo_bin} }
@@ -644,7 +647,7 @@ sub organize_notification_info {
 			}
 		}
 	}
-
+	
 
 	# ping
 	$self->{notification_org}{$delm}{$aid}{ping_check} = $agent->ping_check(); 
@@ -1051,7 +1054,7 @@ sub email {
 			}
 		}
 	}
-	my $to = $self->get_method();
+	my $to = $self->get_func();
 		
 	chomp @msg;
 	
@@ -1100,12 +1103,12 @@ sub exec {
 			}
 		}
 	}
-	my $to = $self->get_method();
+	my $func = $self->get_func();
 		
 	chomp @msg;
-	@tmp = ();  
+	my @tmp = ();  
 	foreach my $line (@msg) {
-		shift @tmp, "$line\n";
+		push @tmp, "$line\n";
 	}
 	@msg = @tmp;
 	
@@ -1119,40 +1122,40 @@ sub exec {
 	if ($self->_get_tier()) {
 		print "\n";
 		print "tier level: ", $self->_get_tier(), "\n";
-		print "tier email: $to\n";
+		print "tier exec: $func\n";
 	}
 	else {
 		print "\n";
-		print "email: $to\n";
+		print "exec: $func\n";
 	}
 	print "--\n";
 
 
 	# compose message for execution 
 	#
-	unshift @msg, "  penemo $version\n"; 
-	unshift @msg, "\n"; 
+	unshift @msg, "  penemo $version\n\n"; 
 	if ($self->_get_tier()) {
-		shift @msg,"\n"; 
-		shift @msg, "tier level: ", $self->_get_tier(), "\n";
-		shift @msg, "tier email: $to\n";
+		push @msg,"\n"; 
+		push @msg, "tier level: ", $self->_get_tier(), "\n";
+		push @msg, "tier exec: $func\n";
 	}
 	else {
-		shift @msg, "\n"; 
-		shift @msg, "email: $to\n";
+		push @msg, "\n"; 
+		push @msg, "exec: $func\n";
 	}
 
 	
 	# send msg as a command line parameter
 	#
-	if (-f $dir_exec/$func) {
-		system("/$dir_exec/$func @msg");
+	print "executing: $dir_exec/$func\n";
+
+	if (-f "$dir_exec/$func") {
+		print `echo "@msg" | /$dir_exec/$func`;
 	}
 	else {
-		penemo::core->notify_die("Can't execute notification exec $func: file does not exist in /$dir_exec/$func\n";
+		penemo::core->notify_die("Can't execute notification exec $func: file does not exist in /$dir_exec/$func\n");
 	}
-
-
+	return;
 }
 
 sub _get_message {

@@ -180,6 +180,7 @@ my @notification_objects = $conf->get_notification_object_array();
 
 # loop through notification objects
 foreach my $notify (@notification_objects) {
+
 	if ($notify->get_method() eq 'exec') {
 		print "executing: ", $notify->get_func(), "\n";
 		$notify->exec($conf->get_instance_name(), $version, $conf->get_dir_exec());
