@@ -43,12 +43,11 @@ else {
 
 # sub for pausing agents.
 sub pause {
-	my $paused = convert_to_fulltime();
-
 	# load agents data file into array
 	my @data = &load_data();  # load agent data into array
 
 	if ($data[7] != '000000000000') {
+		my $paused = convert_to_fulltime();
 		# agent already paused
 		print header;
 		print "<HEAD><TITLE>$agent paused</TITLE></HEAD>\n";
@@ -66,6 +65,7 @@ sub pause {
 	# print html form to get time to pause agent for
 	unless (param('time')) { &get_time($agent); }
 	else {
+		my $paused = convert_to_fulltime();
 		# time set, pause agent
 		$data[6] = '1';
 		$data[7] = $paused;
