@@ -1,4 +1,4 @@
-# modules/penemo/agent.pm
+# lib/penemo/agent.pm
 #
 
 ##################################
@@ -11,7 +11,7 @@
 ####
 
 package penemo::agent;
-#use lib '/usr/local/share/penemo/modules/';
+use lib '/usr/local/share/penemo/lib/';
 
 # nested sub for count methods
 {
@@ -423,7 +423,7 @@ sub set_plugin_errlev {
 sub DESTROY {
         my ($self) = @_;
         $self->_decr_count();
-        print "dead: ", $self->name(), "\n";
+        print "terminating: ", $self->get_name(), "\n";
 }
 
 
@@ -548,7 +548,6 @@ sub snmp {
 	my $community = $self->get_snmp_community();
 	my (@mibs) = split(/ /, $self->get_snmp_mibs());
 	my $error_detected = 0;
-	use penemo::agent::snmp;
 	
 	foreach my $mib (@mibs) {
 		if ($mib eq 'mib-2') {$mib = 'mib2';}

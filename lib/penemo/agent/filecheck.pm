@@ -37,7 +37,7 @@
 ####
 
 package penemo::agent::filecheck;
-#use lib '/usr/local/share/penemo/modules/';
+use lib '/usr/local/share/penemo/lib/';
 use strict;
 
 sub new {

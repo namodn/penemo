@@ -1,4 +1,4 @@
-#  modules/penemo.pm
+#  lib/penemo.pm
 #  Copyright (C) 2000 Nick Jennings
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -314,7 +314,30 @@ sub _agent_config {
 			&_agent_params(\%conf, $ip, 'notify', $line);
 		}
 		elsif ($line =~ /^\s*PLUGIN\s{1}/i) {
-			&_agent_params(\%conf, $ip, 'plugin', $line);
+			#&_agent_params(\%conf, $ip, 'plugin', $line);
+
+        		my $conf_ref = \%conf;
+			my $func = 'plugin';
+       			$line =~ s/^\s*$func\s*//img;
+        		return unless ($line);
+        		my @tmp = split(/"\s*/, $line);
+        		while (@tmp) {
+        		        my $param = shift @tmp;
+        		        $param =~ s/=//mg;
+        		        $param =~ tr/A-Z/a-z/;
+                		my $value = shift @tmp;
+				unless ($param =~ /^mods$/) {
+					my $conf_ref2 = %$conf_ref;
+					if ($param =~ /_/) {
+						my ($plugtype, $param) = split(/_/, $param);
+						$conf_ref2->{$ip}{"plugin_conf"}{$plugtype}{$param} = $value;
+					}
+				}
+				else {
+					$func = $func . '_' . $param;
+        		        	$conf_ref->{$ip}{$func} = $value;
+				}
+       			}
 			if ($conf{$ip}{plugin_mods}) {
 				$conf{$ip}{plugin_check} = '1';
 			}
@@ -442,6 +465,10 @@ sub _plugin_mods {
 	my ($self, $ip) = @_;
 	$self->{$ip}{plugin_mods};
 }
+sub _plugin_conf {
+	my ($self, $ip) = @_;
+	$self->{$ip}{plugin_conf};
+}
 sub _notify_errlev_reset {
 	my ($self, $ip) = @_;
 	$self->{$ip}{notify_errlev_reset};
@@ -501,6 +528,7 @@ sub get_next_agent {
 					snmp_mibs	=> $self->_snmp_mibs($ip), 
 					plugin_check	=> $self->_plugin_check($ip),
 					plugin_mods	=> $self->_plugin_mods($ip),
+					plugin_conf	=> $self->_plugin_conf($ip),
 					group		=> $self->_group($ip),
 					notify_method_1	=> $self->_notify_method_1($ip),
 					notify_method_2	=> $self->_notify_method_2($ip),
