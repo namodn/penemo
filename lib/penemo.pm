@@ -656,6 +656,7 @@ sub index_html_write {
 	my $line = '';
 	my $ok_light = penemo::core->html_image('index', 'ok'); 
 	my $bad_light = penemo::core->html_image('index', 'bad'); 
+	my $max_ip_length = 0;
 
 	foreach my $ref (@agentlist) {
 		my $group = $ref->get_group();
@@ -664,7 +665,14 @@ sub index_html_write {
 		unless ($grouplist_search =~ /\"$group\"/) {
 			push @grouplist, $group;
 		}
+
+		my $ip = $ref->get_ip();
+		my $length = length($ip);
+		$max_ip_length = $length	if ($length > $max_ip_length);
 	}
+
+	
+
 
 	open(HTML, ">$index") or die "Can't write to $index : $!\n"; 
 		print HTML "<HTML>\n"; 
@@ -682,33 +690,42 @@ sub index_html_write {
 		print HTML "</CENTER>\n"; 
 
 		print HTML "<FORM method=\"Post\" action=\"/cgi-bin/penemo-admin.cgi\">\n";
+		print HTML "<TABLE WITH=600 ALIGN=CENTER BORDER=0>\n";
 		foreach my $group (@grouplist) { 
+			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=3>\n";
 			print HTML "<FONT SIZE=4><B>$group</B><BR>\n"; 
-			print HTML "<FONT SIZE=3 COLOR=\"#AAAAAA\">\n"; 
+			print HTML "</TD></TR>\n";
 			foreach my $agent (@agentlist) { 
 				my $ip = $agent->get_ip();
 				if ($agent->get_group() eq "$group") { 
+					print HTML "<TR><TD WIDTH=150 ALIGN=LEFT>\n";
+					print HTML "<FONT SIZE=3 COLOR=\"#AAAAAA\">\n"; 
 					if ($agent->get_index_error_detected()) { 
 						print HTML "$bad_light  ";
 					} 
 					else { 
 						print HTML "$ok_light  ";
 					} 
-					print HTML "<A HREF=\"agents/$ip/index.html\">$ip</A> ",
-						" &nbsp "; 
+					print HTML "<A HREF=\"agents/$ip/index.html\">$ip</A><BR>\n";
+					print HTML "</TD>\n";
+					print HTML "<TD WIDTH=400 ALIGN=LEFT>\n";
 					print HTML "<FONT COLOR=#CCDDA><B>\n";
 					print HTML $agent->get_name();
 					print HTML "</B></FONT>\n"; 
-					print HTML "&nbsp &nbsp ";
+					print HTML "</TD>\n";
+					print HTML "<TD WIDTH=50 ALIGN=LEFT>\n";
 					print HTML "<FONT SIZE=2>\n";
 					print HTML "<A HREF=\"/cgi-bin/penemo-admin.cgi?agent=$ip&pause=1\">pause</A><BR>\n"; 
 					print HTML "</FONT>\n";
+					print HTML "</TD></TR>\n";
 				} 
 			} 
+			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=3>\n";
 			print HTML "&nbsp;<BR>\n"; 
-			print HTML "</FONT>\n"; 
+			print HTML "</TD></TR>\n";
 		} 
 
+		print HTML "</TABLE>\n";
 		print HTML "</FORM>\n";
 		print HTML "&nbsp;<BR>\n"; 
 		print HTML "<HR WIDTH=50%>\n"; 
@@ -916,7 +933,6 @@ sub get_check_status {
 	$string .= $self->get_total_plugin_status()	if ($self->plugin_check());
 
 	if ($string =~ /^\d*0\d*$/) {
-		print "fount a 0 in $string\n";
 		return 0;
 	}
 	return 1;

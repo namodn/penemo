@@ -103,7 +103,6 @@ foreach my $agent (@agents) {
 	}
 	else {
 		# no errors detected
-		print " should both be true: ", $agent->get_check_status(), $agent->have_notifications_been_sent(), "\n";
 		if ( ($agent->get_check_status()) && ($agent->have_notifications_been_sent()) ) {
 			# notifications have been sent, but now, no errors detected.
 			# add to notification stack, for resolved notification.
