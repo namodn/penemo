@@ -20,6 +20,8 @@ unless (param('agent')) {
 }
 
 my $date = `date`;
+chomp $date;
+$date =~ s/\s+/ /g;   # takeout any double spaces
 my ($date_string, $date_delimited) = &convert_date_to_string();
 my $agent = param('agent');
 
@@ -135,6 +137,7 @@ sub convert_to_fulltime {
 	my $time = param('time');
 	if ($time > '60') { $time = '60'; }
 	my ($year, $month, $day, $hour, $minutes) = split(/-/, $date_delimited);
+	print "$date_delimited, year: $year month: $month day: $day hour: $hour min: $minutes\n";
 	my $calc = $minutes + $time;
 	if ($calc >= '60') {
 		$hour++;
@@ -167,6 +170,7 @@ sub convert_to_fulltime {
 
 sub convert_date_to_string {
         my @date = split (/\s/, $date); # Split on whitespace
+	print "", join(' ', @date), "\n";
         my ($month, $day, $time, $year) = ($date[1], $date[2], $date[3], $date[5]);
         $month = convert_month($month);
         my ($hour, $minutes, $seconds) = split(/:/, $time);

@@ -1,7 +1,7 @@
 
  ******************************************************************
  **                                                              **
- **       installation script for penemo: v1.0 BETA              **
+ **       installation script for penemo: v1.0 BETA2             **
  **                                                              **
  **  execute all commands as ROOT unless specified otherwise.    **
  **                                                              **

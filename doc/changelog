@@ -1,5 +1,14 @@
 penemo changelog
 
+
+changes from version 1.0 BETA2 ->
+	* changed the html output a little, changed some font's and cleaned up 
+	   some layout.
+	* fixed a time problem with the penemo-admin.cgi (problem splitting 
+	   date string).
+	* modified the notification messages to be less "wordy".
+
+
 changes from version 1.0 BETA1 -> 1.0 BETA2
 	* notify_cap (specifies the cap at which to stop sending notifications).
 	* html display for the configuration options set for each agent (link 

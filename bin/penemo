@@ -361,7 +361,7 @@ sub convert_date_to_string {
 	my $date = shift;               # Format is 'Thu Jan 13 09:39:40 PST 2000'
 	$date =~ s/\s{2}/ /g;
 	my @date = split (/\s/, $date); # Split on whitespace
-	print $date;
+	#print $date;
 	my ($month, $day, $time, $year) = 
 			($date[1], $date[2], $date[3], $date[5]);
 	if ($day =~ /^\d{1}$/) {

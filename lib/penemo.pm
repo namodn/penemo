@@ -1957,7 +1957,7 @@ sub email {
 		print MAIL "\n"; 
 		print MAIL "  penemo $version\n"; 
 		print MAIL "\n"; 
-		print MAIL @msg; 
+		print MAIL @msg, "\n"; 
 		print MAIL "\n"; 
 		print MAIL "tier level: ", $self->_get_current_tier(), "\n";
 		print MAIL "tier email: $to\n";
