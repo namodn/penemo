@@ -31,6 +31,7 @@
 
 use strict;
 use IO::Handle;
+#use Thread qw(async);
 
 # penemo specific modules
 use lib '/home/nick/devel/penemo/modules/';
@@ -68,12 +69,21 @@ foreach my $agent (@agents) {
 	print "- $ip: loading agent data.\n";
 	$agent->load_persistent_data($conf->get_data_dir());
 
-	print "\t\tnotify_level: ", $agent->get_notify_level(), ", errlev_reset: ", $agent->get_errlev_reset(), "\n";
+	print "\t\tnotify_level: ", $agent->get_notify_level(),
+		", errlev_reset: ", $agent->get_errlev_reset(), "\n";
 
 	# perform check functions
 	&ping_check($agent);
 	&http_check($agent);
 	&snmp_check($agent);
+
+#	$thread1 = async { &snmp_check($agent); }; 
+#	$thread2 = async { &ping_check($agent); }; 
+#	$thread3 = async { &http_check($agent); }; 
+#
+#	$thread2->join;
+#	$thread3->join;
+#	$thread1->join;
 
 	# write agent html
 	print "  $ip: writing agents html file.\n";
