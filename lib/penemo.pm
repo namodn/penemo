@@ -55,6 +55,7 @@ sub file_write
 	close DATA; 
 }
 
+
 # this function takes one arguments, color, and prints the corresponding
 # colored * with HTML tags.
 #
@@ -169,6 +170,7 @@ sub _penemo_config
 		penemo_bin      => '/usr/local/sbin/penemo',
 		ucd_bin_dir     => '/usr/local/bin',
 		plugin_dir	=> '/usr/local/share/penemo/plugin',
+		cgibin_dir	=> '/cgi-bin',
 		errlev_reset	=> '1',
 		tier_support	=> '0',
 		tier_promote	=> '5',
@@ -227,6 +229,7 @@ sub _penemo_config
 					cache_dir       => $conf{cache_dir},
 					data_dir	=> $conf{data_dir},
 					plugin_dir	=> $conf{plugin_dir},
+					cgibin_dir	=> $conf{cgibin_dir},
 					penemo_bin      => $conf{penemo_bin},
 					ucd_bin_dir	=> $conf{ucd_bin_dir},
 					http_command    => $conf{http_command},
@@ -341,6 +344,7 @@ sub get_html_dir                { $_[0]->{default}{html_dir} }
 sub get_cache_dir               { $_[0]->{default}{cache_dir} }
 sub get_data_dir		{ $_[0]->{default}{data_dir} }
 sub get_plugin_dir		{ $_[0]->{default}{plugin_dir} }
+sub get_cgibin_dir		{ $_[0]->{default}{cgibin_dir} }
 sub get_penemo_bin              { $_[0]->{default}{penemo_bin} }
 sub get_ucd_bin_dir             { $_[0]->{default}{ucd_bin_dir} }
 sub get_http_command            { $_[0]->{default}{http_command} }
@@ -752,6 +756,7 @@ sub index_html_write {
 	my $bad_light = penemo::core->html_image('index', 'bad'); 
 	my $paused_light = penemo::core->html_image('index', 'pause'); 
 	my $max_ip_length = 0;
+	my $cgi_bin = $self->get_cgibin_dir();
 
 	foreach my $ref (@agentlist) {
 		my $group = $ref->get_group();
@@ -765,9 +770,6 @@ sub index_html_write {
 		my $length = length($ip);
 		$max_ip_length = $length	if ($length > $max_ip_length);
 	}
-
-	
-
 
 	open(HTML, ">$index") or penemo::core->notify_die("Can't write to $index : $!\n"); 
 		print HTML "<HTML>\n"; 
@@ -786,6 +788,7 @@ sub index_html_write {
 
 		print HTML "<FORM method=\"Post\" action=\"/cgi-bin/penemo-admin.cgi\">\n";
 		print HTML "<TABLE WITH=600 ALIGN=CENTER BORDER=0>\n";
+
 		foreach my $group (@grouplist) { 
 			print HTML "<TR><TD WIDTH=600 ALIGN=LEFT COLSPAN=3>\n";
 			print HTML "<FONT SIZE=4><B>$group</B><BR>\n"; 
@@ -814,11 +817,12 @@ sub index_html_write {
 					print HTML "<TD WIDTH=50 ALIGN=LEFT>\n";
 					print HTML "<FONT SIZE=2>\n";
 					if ($agent->get_paused()) {
-						print HTML "<FONT COLOR=\"#AAAADD\" SIZE=2><I>untill: ", $agent->get_paused_end(), "<BR>\n";
-						print HTML "<A HREF=\"/cgi-bin/penemo-admin.cgi?agent=$ip&unpause=1\">unpause</A></I><BR></FONT>\n"; 
+						print HTML "<FONT COLOR=\"#AAAADD\" SIZE=2><I>untill: ",
+							$agent->get_paused_end(), "<BR>\n";
+						print HTML "<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&unpause=1\">unpause</A></I><BR></FONT>\n"; 
 					}
 					else {
-						print HTML "<A HREF=\"/cgi-bin/penemo-admin.cgi?agent=$ip&pause=1\">pause</A><BR>\n"; 
+						print HTML "<A HREF=\"$cgi_bin/penemo-admin.cgi?agent=$ip&pause=1\">pause</A><BR>\n"; 
 					}
 					print HTML "</FONT>\n";
 					print HTML "</TD></TR>\n";
@@ -1439,7 +1443,33 @@ sub plugin {
 	}
 }
 
-sub agent_html_write
+sub write_agent_history {
+	my ($self, $html_dir, $entry) = @_;
+	my $ip = $self->get_ip();
+	if ($entry eq 'date') {
+		$entry = "date: " . `date`;
+	}
+	chomp $entry;
+
+	unless (-d "$html_dir/agents") {
+		system("mkdir $html_dir/agents");
+	}
+	unless (-d "$html_dir/agents/$ip") {
+		system("mkdir $html_dir/agents/$ip");
+	}
+	unless (-d "$html_dir/agents/$ip/history") {
+		system("mkdir $html_dir/agents/$ip/history");
+	}
+
+	open (HISTORY, ">>$html_dir/agents/$ip/history/index.html") 
+ 			or penemo::core->notify_die("Cant open $html_dir/agents/$ip/history/index.html : $!\n");
+		print HISTORY "$entry<BR>\n";
+	close HISTORY;
+}
+
+
+
+sub write_agent_html
 {
 	my ($self, $html_dir) = @_;
 	my $ip = $self->get_ip();
@@ -1449,7 +1479,11 @@ sub agent_html_write
 	my $bad_light = penemo::core->html_image('agent', 'bad'); 
 
 	unless (-d "$html_dir/agents/$ip") { 
-		system("mkdir $html_dir/agents/$ip") 
+		system("mkdir $html_dir/agents/$ip"); 
+	}
+
+	unless (-d "$html_dir/agents/$ip/history") {
+		system("mkdir $html_dir/agents/$ip/history");
 	}
 
 	open(HTML, ">$html_dir/agents/$ip/index.html") 
@@ -1465,10 +1499,8 @@ sub agent_html_write
 	print HTML "\t<FONT SIZE=5><B>$ip - $name</B></FONT>\n"; 
 	print HTML "<HR WITH=50%>\n"; 
 
-	unless ($self->snmp_check()) { 
-		print HTML "[not an snmp aware device]<BR>\n"; 
-	} 
-	else { 
+	print HTML "[<A HREF=\"history/index.html\">history</A>]  ";
+	if ($self->snmp_check()) { 
 		my @mibs = split(/ /, $self->get_snmp_mibs());
 		if (-f "$html_dir/agentdump/$ip") {
 			system("rm $html_dir/agentdump/$ip");
@@ -1480,6 +1512,9 @@ sub agent_html_write
 		}
 		print HTML "[<A HREF=\"../../agentdump/$ip\">current snmp info</A>]<BR>\n"; 
 	} 
+	else {
+		print HTML "<BR>\n";
+	}
 	
 	print HTML "</CENTER>\n"; 
 	print HTML "&nbsp;<BR>\n"; 
@@ -1737,7 +1772,7 @@ sub email {
 			push @msg, "  all errors resolved.\n";
 		}
 		else {
-			my @tmp = $self->get_message($ip);
+			my @tmp = $self->_get_message($ip);
 			foreach my $line (@tmp) {
 				push @msg, $line;
 			}
@@ -1768,7 +1803,7 @@ sub execute {
 }
 
 
-sub get_message {
+sub _get_message {
 	my ($self, $ip) = @_;
 	my @msg = ();
 	if ( ($self->_get_ping_check($ip)) && (! $self->_get_ping_status($ip)) ) {

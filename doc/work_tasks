@@ -22,15 +22,14 @@
 
 [x] snmp mibs dont have a way to notify on snmp alerts within mib check.
 
+[x] make a history page for each agent.
 
-[-] don't forget notify exec
-
-
-[!] make it so notifications reset <type>_errlev, so that there arent
+[x] make it so notifications reset <type>_errlev, so that there arent
       overlapping counts from different checks in same agent, resulting
       in more notifications than set in notify_level
 
-[!] make a history page for each agent.
+
+[-] notify exec (pain in the ass)
 
 
 [?] make http its own obj, or something, impliment multi-http checks.

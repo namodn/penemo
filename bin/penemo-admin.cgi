@@ -11,7 +11,7 @@ unless (param('agent')) {
 	die "no agent specified\n";
 }
 
-my $data_dir = &get_data_dir();
+my ($data_dir, $html_dir, $cgibin_dir) = &get_conf_dirs();
 my $date = `date`;
 my ($date_string, $date_delimited) = &convert_date_to_string();
 my $agent = param('agent');
@@ -57,6 +57,7 @@ sub pause {
 		$data[7] = $paused;
 	
 		&set_data(@data);  # write agent data with paused info
+		&update_html_pause($paused);
 
 		print header;
 		print "<HEAD><TITLE>$agent paused</TITLE></HEAD>\n";
@@ -64,7 +65,6 @@ sub pause {
 		print "&nbsp;<BR>\n";
 		print "$agent paused untill: $paused <BR>\n";
 		print "&nbsp;<BR>\n";
-		print "html display will be updated next time penemo is run.<BR>\n";
 		print "</BODY>\n";
 		print end_html;
 		exit;
@@ -98,10 +98,13 @@ sub unpause {
 #
 # FUNCTIONS
 #
-#
 
-# function returns the path to the agents data_dir
-sub get_data_dir {
+# function returns the path to the agents data_dir, html_dir and cgibin_dir
+sub get_conf_dirs 
+	my $html_dir = '/usr/local/share/penemo/html';
+	my $data_dir = '/usr/local/share/penemo/data';
+	my $cgibin_dir = '/cgi-bin';
+
 	open(CFG, "$conf_dir/penemo.conf")
 			or die "Can't open $conf_dir/penemo.conf : $!\n";
 		my @file = <CFG>;
@@ -112,11 +115,20 @@ sub get_data_dir {
 		next if ($line =~ /^$/);
 		chomp $line;
 
-		next unless ($line =~ /^data_dir/);
-
-		my ($name, $value) = split(' ', $line);
-		return ($value);
+		if ($line =~ /^data_dir/) {
+			my ($name, $value) = split(' ', $line);
+			$data_dir = $value;
+		}
+		elsif ($line =~ /^html_dir/) {
+			my ($name, $value) = split(' ', $line);
+			$html_dir = $value;
+		}
+		elsif ($line =~ /^cgibin_dir/) {
+			my ($name, $value) = split(' ', $line);
+			$cgibin_dir = $value;
+		}
 	}
+	return ($html_dir, $html_dir, $cgibin_dir);
 }
 
 # prints html for to get time to pause agent for.
@@ -214,4 +226,11 @@ sub set_data {
 		}
 		print DATA "\n";
 	close DATA;
+}
+
+
+sub update_html_pause {
+	my $time = shift;
+}
+sub update_html_unpause {
 }

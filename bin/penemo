@@ -47,6 +47,7 @@ my $agent_conf_file  = '/home/nick/devel/penemo/conf/agent.conf';
 print "loading configuration files.\n";
 my $conf = penemo::config->load_config($penemo_conf_file, $agent_conf_file);
 
+
 print "begining agent checks.\n";
 print "  1 = good.   0 = bad.\n";
 
@@ -68,6 +69,8 @@ foreach my $agent (@agents) {
 	# load persistent data ( error levels etc. ) into $agent object
 	print "- $ip: loading agent data.\n";
 	$agent->load_persistent_data($conf->get_data_dir());
+	# write date for history
+	$agent->write_agent_history($conf->get_html_dir, 'date');
 
 	print "\t\tnotify_level: ", $agent->get_notify_level(),
 		", errlev_reset: ", $agent->get_errlev_reset(), "\n";
@@ -97,7 +100,7 @@ foreach my $agent (@agents) {
 
 	# write agent html
 	print "  $ip: writing agents html file.\n";
-	$agent->agent_html_write( $conf->get_html_dir() );
+	$agent->write_agent_html( $conf->get_html_dir() );
 	# add to list of agents for index html
 	$conf->push_html_agentlist($agent);
 
@@ -106,42 +109,43 @@ foreach my $agent (@agents) {
 		if ($agent->ping_check()) {
 			if ($agent->get_ping_errlev() >= $agent->get_notify_level()) {
 				$stack = 1;
-				# reset errlev if set to do so.
-				if ($agent->get_errlev_reset()) {
-					$agent->set_ping_errlev('0');
-				}
-
 			}
 		}
 		if ($agent->http_check()) {
 			if ($agent->get_http_errlev() >= $agent->get_notify_level()) {
 				$stack = 1;
-				# reset errlev if set to do so.
-				if ($agent->get_errlev_reset()) {
-					$agent->set_http_errlev('0');
-				}
 			}
 		}
 		if ($agent->snmp_check()) {
 			if ($agent->get_snmp_errlev() >= $agent->get_notify_level()) {
 				$stack = 1;
-				# reset errlev if set to do so.
-				if ($agent->get_errlev_reset()) {
-					$agent->set_snmp_errlev('0');
-				}
 			}
 		}
 		if ($agent->plugin_check()) {
 			if ($agent->get_plugin_errlev() >= $agent->get_notify_level()) {
 				$stack = 1;
-				# reset errlev if set to do so.
-				if ($agent->get_errlev_reset()) {
-					$agent->set_plugin_errlev('0');
-				}
 			}
 		}
 
-		if ($stack)	{ &add_to_notify_stack($agent); }	
+		if ($stack) { 
+			&add_to_notify_stack($agent);	
+			# reset errlev if set to do so.
+			if ($agent->get_errlev_reset()) {
+				$agent->set_ping_errlev('0');
+			}
+			if ($agent->get_errlev_reset()) {
+				$agent->set_http_errlev('0');
+			}
+			if ($agent->get_errlev_reset()) {
+				$agent->set_snmp_errlev('0');
+			}
+			if ($agent->get_errlev_reset()) {
+				$agent->set_plugin_errlev('0');
+			}
+			# keep history
+			$agent->write_agent_history($conf->get_html_dir, "notification sent");
+		}
+
 	}
 	else {
 		# no errors detected
@@ -223,6 +227,7 @@ sub ping_check {
 		unless ($agent->get_ping_status()) { 
  			print "\terrlev: ", $agent->get_ping_errlev(), "\n";
 			$agent->set_error_detected(); 
+			$agent->write_agent_history($conf->get_html_dir, "ping: 0");
 		}
 		else { 
 			print "\n";
@@ -249,6 +254,7 @@ sub http_check {
 		unless ($agent->get_http_status()) { 
  			print "  errlev: ", $agent->get_http_errlev(), "\n";
 			$agent->set_error_detected(); 
+			$agent->write_agent_history($conf->get_html_dir, "http: 0");
 		}
 		else { 
 			print "\n";
@@ -278,6 +284,7 @@ sub snmp_check {
 
 			unless ($agent->get_snmp_status($mib)) { 
 				$snmp_errlev = '0';
+				$agent->write_agent_history($conf->get_html_dir, "snmp $mib: 0");
 			}
 		}
 
@@ -314,6 +321,7 @@ sub plugin_check {
 
 			unless ($agent->get_plugin_status($mod)) { 
 				$plugin_errlev = '0';
+				$agent->write_agent_history($conf->get_html_dir, "plugin $mod: 0");
 			}
 		}
 
