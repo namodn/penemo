@@ -614,6 +614,7 @@ sub _get_html_agentlist {
 	return @{ $_[0]->{html_agentlist} }; 
 } 
 
+# write the index.html that lists all the agents and a general status indicator
 sub index_html_write {
 	my ($self, $version, $date) = @_;
 	my @agentlist = $self->_get_html_agentlist();
