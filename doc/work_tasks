@@ -3,7 +3,6 @@
 # [!]: need to do  [-]: working on it  [x]: complete  [?]: when i have the time
 #
 
-
 [x] tier levels for notification
       tier1 emails="emails,emails" increment=(3 bad checks)
       tier2 emails="emails,emails" increment=(3 bad checks)

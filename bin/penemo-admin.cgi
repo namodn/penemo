@@ -28,12 +28,14 @@ else {
 
 
 
+# sub for pausing agents.
 sub pause {
 	my $paused = convert_to_fulltime();
 
-	my @data = &load_data();
+	my @data = &load_data();  # load agent data into array
 
 	if ($data[7] != '000000000000') {
+		# agent already paused
 		print header;
 		print "<HEAD><TITLE>$agent paused</TITLE></HEAD>\n";
 		print '<BODY BGCOLOR="#000000" TEXT="#AAAADD">', "\n";
@@ -47,12 +49,14 @@ sub pause {
 		exit;
 	}
 	
+	# print html form to get time to pause agent for
 	unless (param('time')) { &get_time($agent); }
 	else {
+		# time set, pause agent
 		$data[6] = '1';
 		$data[7] = $paused;
 	
-		&set_data(@data);
+		&set_data(@data);  # write agent data with paused info
 
 		print header;
 		print "<HEAD><TITLE>$agent paused</TITLE></HEAD>\n";
@@ -67,6 +71,7 @@ sub pause {
 	}
 }
 
+# sub to unpause agent
 sub unpause {
 	my @data = &load_data();
 
@@ -95,6 +100,7 @@ sub unpause {
 #
 #
 
+# function returns the path to the agents data_dir
 sub get_data_dir {
 	open(CFG, "$conf_dir/penemo.conf")
 			or die "Can't open $conf_dir/penemo.conf : $!\n";
@@ -113,6 +119,7 @@ sub get_data_dir {
 	}
 }
 
+# prints html for to get time to pause agent for.
 sub get_time {
 	print header;
 	print "<HEAD><TITLE>pause $agent</TITLE></HEAD>\n";
@@ -129,6 +136,7 @@ sub get_time {
 	print end_html;
 }
 
+# converts unix time to YYYYMoMoDDHHMiMi
 sub convert_to_fulltime {
 	my $time = param('time');
 	if ($time > '60') { $time = '60'; }
@@ -136,15 +144,30 @@ sub convert_to_fulltime {
 	my $calc = $minutes + $time;
 	if ($calc >= '60') {
 		$hour++;
+		if ($hour >= '24') {
+			$hour = $hour - 24;	
+			$day++;
+		}
 		$minutes = $calc - 60;
 	}	
 	else {
 		$minutes = $calc;
 	}
 
+	# if any are single digits add a before it
 	if ($minutes =~ /^\d{1}$/) {
 		$minutes = "0$minutes";
 	}
+	if ($hour =~ /^\d{1}$/) {
+		$hour = "0$hour";
+	}
+	if ($day =~ /^\d{1}$/) {
+		$day = "0$day";
+	}
+	if ($month =~ /^\d{1}$/) {
+		$month = "0$month";
+	}
+
 	return ("$year$month$day$hour$minutes");
 }
 

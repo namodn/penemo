@@ -957,7 +957,7 @@ sub load_persistent_data {
 		$self->set_paused($data[6]);
 		$self->set_paused_end($data[7]); 	# YYYYMMDDHHMM - the time when the agent unpauses.
 
-print "\t\terror_levels: ping: $data[0], http: $data[1], snmp: $data[2] plugin: $data[3]\n";
+print "\t\terror_levels: ping: $data[0], http: $data[1], snmp: $data[2], plugin: $data[3]\n";
 print "\t\tcurrent_tier: $data[4], notifications_sent: $data[5]\n";
 	}
 
